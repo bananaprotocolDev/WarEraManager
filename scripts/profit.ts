@@ -3,10 +3,9 @@
  * Uso: npm run profit -- <userId> <countryId>
  *
  * NOTA: las cifras son ESTIMADAS hasta calibrar game-constants (ver spec §4).
- * gameConfig.getGameConfig se consulta crudo acá; su parseo tipado llega en el Plan 2.
  */
 import { WareraClient } from "../src/lib/warera/client";
-import { companyProfit } from "../src/lib/economy";
+import { companyProfit, toItemDef } from "../src/lib/economy";
 import type { ItemDef } from "../src/lib/economy";
 
 async function main() {
@@ -19,24 +18,10 @@ async function main() {
   const client = new WareraClient();
   const prices = await client.getPrices();
 
-  // gameConfig crudo: extraemos el mapa de items -> { productionPoints, productionNeeds, type }
-  const gcRes = await fetch("https://api2.warera.io/trpc/gameConfig.getGameConfig", {
-    headers: { Origin: "https://app.warera.io", "User-Agent": "Mozilla/5.0" },
-  });
-  if (!gcRes.ok) {
-    throw new Error(`gameConfig fetch failed: HTTP ${gcRes.status}`);
-  }
-  const gc = (await gcRes.json())?.result?.data ?? {};
-  // `any` deliberado: el parseo tipado de gameConfig (gameConfigSchema) llega en el Plan 2.
-  const itemsRaw: Record<string, any> = gc.items ?? {};
+  const gameConfig = await client.getGameConfig();
   const itemDef = (code: string): ItemDef => {
-    const r = itemsRaw[code] ?? {};
-    return {
-      code,
-      type: r.type ?? "product",
-      productionPoints: r.productionPoints ?? 1,
-      productionNeeds: r.productionNeeds ?? {},
-    };
+    const raw = gameConfig.items[code] ?? { type: "product", productionPoints: 1, productionNeeds: {} };
+    return toItemDef(code, raw);
   };
 
   const taxes = countryId

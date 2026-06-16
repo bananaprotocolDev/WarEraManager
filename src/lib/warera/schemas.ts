@@ -70,6 +70,15 @@ export const gameConfigSchema = z
   })
   .passthrough();
 
+/** user.getUserLite → datos básicos del usuario (incluye su country id). */
+export const userLiteSchema = z
+  .object({
+    _id: z.string(),
+    username: z.string(),
+    country: z.string().optional(),
+  })
+  .passthrough();
+
 /** country.getCountryById -> impuestos. */
 export const countrySchema = z
   .object({

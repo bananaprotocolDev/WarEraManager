@@ -73,4 +73,14 @@ describe("WareraClient", () => {
     const gc = await client.getGameConfig();
     expect(gc.items.bread.type).toBe("product");
   });
+
+  it("getUserLite envía userId y parsea", async () => {
+    const spy = mockFetchOnce({ _id: "u1", username: "majima", country: "co1" });
+    const client = new WareraClient();
+    const u = await client.getUserLite("u1");
+    expect(u.country).toBe("co1");
+    const calledUrl = spy.mock.calls[0][0] as string;
+    expect(calledUrl).toContain("user.getUserLite");
+    expect(calledUrl).toContain(encodeURIComponent(JSON.stringify({ userId: "u1" })));
+  });
 });

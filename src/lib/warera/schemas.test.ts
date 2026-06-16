@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema } from "./schemas";
+import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema } from "./schemas";
 
 describe("warera schemas", () => {
   it("desenvuelve la forma tRPC { result: { data } }", () => {
@@ -47,5 +47,23 @@ describe("gameConfigSchema", () => {
     // grain sin productionPoints/needs → defaults
     expect(gc.items.grain.productionPoints).toBe(1);
     expect(gc.items.grain.productionNeeds).toEqual({});
+  });
+});
+
+describe("userLiteSchema", () => {
+  it("parsea id, username y country tolerando extras", () => {
+    const u = userLiteSchema.parse({
+      _id: "u1",
+      username: "majima",
+      country: "co1",
+      skills: { production: { level: 3 } },
+    });
+    expect(u._id).toBe("u1");
+    expect(u.country).toBe("co1");
+  });
+
+  it("acepta country ausente", () => {
+    const u = userLiteSchema.parse({ _id: "u2", username: "x" });
+    expect(u.country).toBeUndefined();
   });
 });

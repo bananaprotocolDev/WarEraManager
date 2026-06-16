@@ -7,6 +7,7 @@ import {
   workersSchema,
   countrySchema,
   gameConfigSchema,
+  userLiteSchema,
 } from "./schemas";
 
 const DEFAULT_BASE = "https://api2.warera.io/trpc";
@@ -73,5 +74,9 @@ export class WareraClient {
 
   getGameConfig() {
     return this.call("gameConfig.getGameConfig", gameConfigSchema);
+  }
+
+  getUserLite(userId: string) {
+    return this.call("user.getUserLite", userLiteSchema, { userId });
   }
 }

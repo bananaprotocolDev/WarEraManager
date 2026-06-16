@@ -21,6 +21,11 @@ describe("WareraClient", () => {
 
     const calledUrl = spy.mock.calls[0][0] as string;
     expect(calledUrl).toContain("/trpc/itemTrading.getPrices");
+
+    // Las cabeceras CORS son las únicas "credenciales" que envía el cliente.
+    const calledOptions = spy.mock.calls[0][1] as RequestInit;
+    const headers = calledOptions.headers as Record<string, string>;
+    expect(headers["Origin"]).toBe("https://app.warera.io");
   });
 
   it("envía el input como parámetro JSON url-encoded", async () => {

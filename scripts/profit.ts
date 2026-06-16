@@ -23,7 +23,11 @@ async function main() {
   const gcRes = await fetch("https://api2.warera.io/trpc/gameConfig.getGameConfig", {
     headers: { Origin: "https://app.warera.io", "User-Agent": "Mozilla/5.0" },
   });
+  if (!gcRes.ok) {
+    throw new Error(`gameConfig fetch failed: HTTP ${gcRes.status}`);
+  }
   const gc = (await gcRes.json())?.result?.data ?? {};
+  // `any` deliberado: el parseo tipado de gameConfig (gameConfigSchema) llega en el Plan 2.
   const itemsRaw: Record<string, any> = gc.items ?? {};
   const itemDef = (code: string): ItemDef => {
     const r = itemsRaw[code] ?? {};

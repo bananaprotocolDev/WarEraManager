@@ -10,6 +10,8 @@ export function productionOptimizer(args: { items: ItemDef[]; prices: PriceMap }
   const options: ProductionOption[] = [];
 
   for (const item of args.items) {
+    // Solo items de producción estándar (product/raw). Se excluyen case/equipment/weapon
+    // a propósito: no entran en el optimizador de producción del MVP.
     if (item.type !== "product" && item.type !== "raw") continue;
     const sellPrice = args.prices[item.code];
     if (sellPrice === undefined) continue;

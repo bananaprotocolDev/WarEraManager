@@ -47,17 +47,21 @@ export async function buildPortfolio(
     ? (await client.getCountryById(user.country)).taxes
     : { income: 0, market: 0, selfWork: 0 };
 
-  let wagesAvailable = true;
+  // Sin autenticación, worker.getWorkers devuelve 401 → ni lo intentamos
+  // (evita un round-trip garantizado a 401). Con auth, sí lo leemos.
+  let wagesAvailable = opts.authenticated;
   const companies: CompanyReport[] = [];
 
   for (const companyId of companyList.items) {
     const c = await client.getCompanyById(companyId);
 
     let workers: { wage: number }[] = [];
-    try {
-      workers = await client.getWorkers(companyId);
-    } catch {
-      wagesAvailable = false;
+    if (opts.authenticated) {
+      try {
+        workers = await client.getWorkers(companyId);
+      } catch {
+        wagesAvailable = false;
+      }
     }
 
     const rawItem = gameConfig.items[c.itemCode] ?? {

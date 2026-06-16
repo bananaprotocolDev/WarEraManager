@@ -35,4 +35,10 @@ describe("GET /api/report", () => {
     await GET(new Request("http://localhost/api/report?userId=u1", { headers: { "X-API-Key": "tok" } }));
     expect(mock).toHaveBeenCalledWith(expect.anything(), { userId: "u1", authenticated: true });
   });
+
+  it("502 si el servicio falla", async () => {
+    (buildPortfolio as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("upstream"));
+    const res = await GET(new Request("http://localhost/api/report?userId=u1"));
+    expect(res.status).toBe(502);
+  });
 });

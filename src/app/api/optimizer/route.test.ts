@@ -10,9 +10,15 @@ describe("GET /api/optimizer", () => {
     (buildOptimizer as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       options: [{ itemCode: "bread", marginPerPoint: 1.3 }],
     });
-    const res = await GET(new Request("http://localhost/api/optimizer"));
+    const res = await GET();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.options[0].itemCode).toBe("bread");
+  });
+
+  it("502 si el servicio falla", async () => {
+    (buildOptimizer as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("HTTP 500"));
+    const res = await GET();
+    expect(res.status).toBe(502);
   });
 });

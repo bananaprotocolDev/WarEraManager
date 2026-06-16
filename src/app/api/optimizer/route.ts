@@ -1,7 +1,7 @@
 import { WareraClient } from "@/lib/warera/client";
 import { buildOptimizer } from "@/server/optimizer";
 
-export async function GET(_req?: Request): Promise<Response> {
+export async function GET(): Promise<Response> {
   const client = new WareraClient();
   try {
     return Response.json(await buildOptimizer(client));

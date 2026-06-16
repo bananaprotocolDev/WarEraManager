@@ -37,13 +37,27 @@ describe("buildPortfolio", () => {
     expect(r.estimated).toBe(true); // game-constants sin calibrar
   });
 
-  it("cuando worker.getWorkers falla (sin auth), salarios=0 y wagesAvailable=false", async () => {
+  it("sin autenticación no intenta leer salarios (wageCost=0, wagesAvailable=false)", async () => {
+    let called = false;
+    const client = fakeClient({
+      getWorkers: async () => {
+        called = true;
+        return [];
+      },
+    });
+    const r = await buildPortfolio(client, { userId: "u1", authenticated: false });
+    expect(called).toBe(false); // ni se llama el endpoint auth-gated
+    expect(r.companies[0].profit.wageCost).toBe(0);
+    expect(r.wagesAvailable).toBe(false);
+  });
+
+  it("con autenticación, si getWorkers falla, wagesAvailable=false", async () => {
     const client = fakeClient({
       getWorkers: async () => {
         throw new Error("HTTP 401");
       },
     });
-    const r = await buildPortfolio(client, { userId: "u1", authenticated: false });
+    const r = await buildPortfolio(client, { userId: "u1", authenticated: true });
     expect(r.companies[0].profit.wageCost).toBe(0);
     expect(r.wagesAvailable).toBe(false);
   });

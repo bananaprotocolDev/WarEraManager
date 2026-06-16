@@ -9,6 +9,10 @@ const ORIGIN = "https://app.warera.io";
 const globalCache = new TtlCache(5 * 60 * 1000); // 5 min para datos globales
 const limiter = new RateLimiter(120, 60 * 1000); // 120 req/min por IP
 
+// Supuesto: la app corre detrás de un proxy confiable (p.ej. el edge de Vercel)
+// que setea x-forwarded-for. Un cliente directo podría falsificar este header y
+// evadir el rate-limit por IP; es una limitación conocida del rate-limit por IP
+// en serverless, aceptable a la escala actual. Endurecer si se expone sin proxy.
 function clientIp(req: Request): string {
   return (
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||

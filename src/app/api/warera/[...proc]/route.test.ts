@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { GET } from "./route";
+import { RateLimiter } from "@/lib/server/rate-limit";
 
 function ctx(proc: string[]) {
   return { params: Promise.resolve({ proc }) };
@@ -43,6 +44,16 @@ describe("proxy /api/warera/[...proc]", () => {
     await GET(req, ctx(["worker.getWorkers"]));
     const opts = spy.mock.calls[0][1] as RequestInit;
     expect((opts.headers as Record<string, string>)["X-API-Key"]).toBe("tok");
+  });
+
+  it("devuelve 429 cuando se supera el rate limit, sin llamar upstream", async () => {
+    // El handler usa un RateLimiter singleton; espiar el prototipo afecta esa instancia.
+    vi.spyOn(RateLimiter.prototype, "allow").mockReturnValue(false);
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const req = new Request("http://localhost/api/warera/company.getById");
+    const res = await GET(req, ctx(["company.getById"]));
+    expect(res.status).toBe(429);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("propaga el input query-string al upstream", async () => {

@@ -32,6 +32,13 @@ escalar a producto público multiusuario** sin rediseño.
   Solo unos pocos (rankings, referrals) requieren API key (se obtiene en *Warera → Settings →
   API Tokens*; es read-only, no la contraseña). **El MVP NO necesita ninguna credencial.**
 - Header `Origin: https://app.warera.io` es requerido por algunos endpoints; el proxy lo añade.
+- **Hallazgo (Plan 1, verificado en vivo 2026-06-16):** `worker.getWorkers` está **auth-gated**
+  (HTTP 401 para empresas de terceros). El resto de lo que usa el MVP (precios, `gameConfig`,
+  `company.getCompanies`, `company.getById`, `country.getCountryById`) respondió público y sin auth.
+  **Implicación:** el costo de **salarios** del dueño requiere autenticación (cookie de sesión o
+  API token). El MVP sigue siendo "cero credenciales" para todo salvo salarios; mientras no haya
+  auth, el beneficio se calcula con salarios=0 y se marca como **sobreestimado**. El soporte de
+  auth en `WareraClient` se aborda en el Plan 2 (ver §6).
 
 ### Endpoints usados (todos públicos, GET)
 
@@ -142,6 +149,10 @@ cifras como definitivas. La UI marca valores no calibrados como "estimados".
 - Proxy con **allow-list de endpoints** (solo los read-only usados) + **rate-limit propio**.
 - **Validación con Zod** en cada API route; sin `eval`, sin reenviar params crudos sin validar.
 - Cabeceras de seguridad (CSP, etc.). Secrets (si luego se usan rankings) solo en env del server.
+- **Salarios (auth requerida):** `worker.getWorkers` exige autenticación. El Plan 2 añade a
+  `WareraClient` soporte de auth (cookie de sesión o API token de *Settings → API Tokens*),
+  pasado por-petición desde el cliente y nunca persistido en el servidor. Sin auth, la app
+  muestra el beneficio con salarios=0 y lo marca explícitamente como sobreestimado.
 - **Futuro (fuera del MVP):** si un usuario quiere datos privados con su API token, se guarda
   **cifrado del lado del cliente** o se usa por-petición sin persistir en el servidor. Decisión
   documentada, no implementada en el MVP.

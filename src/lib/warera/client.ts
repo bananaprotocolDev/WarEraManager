@@ -6,6 +6,7 @@ import {
   companyListSchema,
   workersSchema,
   countrySchema,
+  gameConfigSchema,
 } from "./schemas";
 
 const DEFAULT_BASE = "https://api2.warera.io/trpc";
@@ -68,5 +69,9 @@ export class WareraClient {
 
   getCountryById(countryId: string) {
     return this.call("country.getCountryById", countrySchema, { countryId });
+  }
+
+  getGameConfig() {
+    return this.call("gameConfig.getGameConfig", gameConfigSchema);
   }
 }

@@ -41,6 +41,35 @@ export const companyListSchema = z.object({
 /** worker.getWorkers -> lista de trabajadores con salario. */
 export const workersSchema = z.array(z.object({ wage: z.number() }).passthrough());
 
+/** Un item dentro de gameConfig.items. Tolerante; normaliza campos de producción. */
+export const gameItemSchema = z
+  .object({
+    type: z.string().default("product"),
+    productionPoints: z.number().default(1),
+    productionNeeds: z.record(z.string(), z.number()).default({}),
+  })
+  .passthrough();
+
+/** gameConfig.getGameConfig → { items: { code: gameItem } }. */
+export const gameConfigSchema = z
+  .object({
+    items: z
+      .preprocess(
+        (raw) => {
+          if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return {};
+          // Drop non-object values (e.g. strings injected by the API as noise)
+          return Object.fromEntries(
+            Object.entries(raw as Record<string, unknown>).filter(
+              ([, v]) => v !== null && typeof v === "object" && !Array.isArray(v),
+            ),
+          );
+        },
+        z.record(z.string(), gameItemSchema),
+      )
+      .default({}),
+  })
+  .passthrough();
+
 /** country.getCountryById -> impuestos. */
 export const countrySchema = z
   .object({

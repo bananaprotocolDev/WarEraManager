@@ -66,4 +66,11 @@ describe("WareraClient", () => {
     const headers = opts.headers as Record<string, string>;
     expect(headers["X-API-Key"]).toBeUndefined();
   });
+
+  it("getGameConfig parsea items", async () => {
+    mockFetchOnce({ items: { bread: { type: "product", productionPoints: 1, productionNeeds: {} } } });
+    const client = new WareraClient();
+    const gc = await client.getGameConfig();
+    expect(gc.items.bread.type).toBe("product");
+  });
 });

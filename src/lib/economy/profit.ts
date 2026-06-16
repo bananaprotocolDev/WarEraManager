@@ -33,6 +33,10 @@ export function companyProfit(args: {
   }
 
   const wageCost = args.workers.reduce((sum, w) => sum + w.wage, 0);
+  // Solo se aplica el impuesto de MERCADO: grava las ventas de la empresa en el
+  // mercado. Los impuestos `income` y `selfWork` gravan salarios/autotrabajo, no las
+  // ventas de una empresa, por eso no se aplican acá. A confirmar en la calibración
+  // (ver spec §4). Por eso `Taxes` incluye los tres campos aunque solo se use `market`.
   const tax = revenue * ((args.taxes.market ?? 0) / 100);
   const netProfit = revenue - inputCost - wageCost - tax;
 

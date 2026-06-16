@@ -30,6 +30,7 @@ export function hiringAnalysis(args: {
     marginalInputCost += qtyPerUnit * marginalUnits * (args.prices[inputCode] ?? 0);
   }
 
+  // Solo impuesto de mercado sobre las ventas marginales (ver nota en profit.ts).
   const marginalTax = marginalRevenue * ((args.taxes.market ?? 0) / 100);
   const marginalValue = marginalRevenue - marginalInputCost - marginalTax;
 

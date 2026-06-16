@@ -34,4 +34,18 @@ describe("hiringAnalysis", () => {
     const r = hiringAnalysis({ company, item: bread, prices, taxes, candidateWage: 6, constants: GAME_CONSTANTS });
     expect(r.worthIt).toBe(false);
   });
+
+  it("aplica impuesto de mercado al valor marginal", () => {
+    const taxedTaxes: Taxes = { income: 0, market: 10, selfWork: 0 };
+    // marginalUnits = 12/3 = 4; marginalRevenue = 4*1.5 = 6
+    // marginalInputCost = 4*2*0.1 = 0.8; marginalTax = 6*0.10 = 0.6
+    // marginalValue = 6 - 0.8 - 0.6 = 4.6
+    const r = hiringAnalysis({ company, item: bread, prices, taxes: taxedTaxes, candidateWage: 4, constants: GAME_CONSTANTS });
+    expect(r.marginalValue).toBeCloseTo(4.6);
+    expect(r.maxWage).toBeCloseTo(4.6);
+    expect(r.worthIt).toBe(true); // candidateWage 4 < 4.6
+
+    const r2 = hiringAnalysis({ company, item: bread, prices, taxes: taxedTaxes, candidateWage: 5, constants: GAME_CONSTANTS });
+    expect(r2.worthIt).toBe(false); // candidateWage 5 > 4.6
+  });
 });

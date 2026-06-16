@@ -43,9 +43,17 @@ async function main() {
   console.log(`\nEmpresas de ${userId}: ${list.items.length}\n`);
 
   let total = 0;
+  let workersUnavailable = false;
   for (const companyId of list.items) {
     const c = await client.getCompanyById(companyId);
-    const workers = await client.getWorkers(companyId);
+    // worker.getWorkers está auth-gated: devuelve 401 para empresas de terceros.
+    // Si falla, seguimos con salarios=0 y avisamos (ver hallazgo para Plan 2).
+    let workers: Awaited<ReturnType<typeof client.getWorkers>> = [];
+    try {
+      workers = await client.getWorkers(companyId);
+    } catch {
+      workersUnavailable = true;
+    }
     const item = itemDef(c.itemCode);
     const p = companyProfit({
       company: {
@@ -68,6 +76,12 @@ async function main() {
     );
   }
   console.log(`\nTOTAL neto/día estimado: ${total.toFixed(2)}\n`);
+  if (workersUnavailable) {
+    console.log(
+      "AVISO: worker.getWorkers requiere autenticación (401). Los salarios se " +
+        "contaron como 0, así que el beneficio está SOBREESTIMADO. Ver spec §6 / Plan 2.\n",
+    );
+  }
 }
 
 main().catch((e) => {

@@ -2,7 +2,10 @@ import { z } from "zod";
 
 /** Envoltorio tRPC: la data útil vive en result.data. */
 export function trpcEnvelope<T extends z.ZodTypeAny>(dataSchema: T) {
-  return z.object({ result: z.object({ data: dataSchema }) }).transform((v) => v.result.data);
+  return z
+    .object({ result: z.object({ data: dataSchema }) })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .transform((v: any) => v.result.data as z.output<T>);
 }
 
 /** itemTrading.getPrices -> { itemCode: precio }. */
@@ -25,7 +28,7 @@ export const companySchema = z
         automatedEngine: u.automatedEngine ?? 0,
         breakRoom: u.breakRoom ?? 0,
       }))
-      .default({}),
+      .default({ automatedEngine: 0, breakRoom: 0 }),
   })
   .passthrough();
 
@@ -53,6 +56,6 @@ export const countrySchema = z
         market: t.market ?? 0,
         selfWork: t.selfWork ?? 0,
       }))
-      .default({}),
+      .default({ income: 0, market: 0, selfWork: 0 }),
   })
   .passthrough();

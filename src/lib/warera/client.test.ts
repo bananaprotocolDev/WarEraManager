@@ -48,4 +48,22 @@ describe("WareraClient", () => {
     const client = new WareraClient();
     await expect(client.getPrices()).rejects.toThrow(/500/);
   });
+
+  it("envía X-API-Key cuando se construye con apiKey", async () => {
+    const spy = mockFetchOnce({ grain: 0.1 });
+    const client = new WareraClient({ apiKey: "secret-token" });
+    await client.getPrices();
+    const opts = spy.mock.calls[0][1] as RequestInit;
+    const headers = opts.headers as Record<string, string>;
+    expect(headers["X-API-Key"]).toBe("secret-token");
+  });
+
+  it("no envía X-API-Key cuando no hay apiKey", async () => {
+    const spy = mockFetchOnce({ grain: 0.1 });
+    const client = new WareraClient();
+    await client.getPrices();
+    const opts = spy.mock.calls[0][1] as RequestInit;
+    const headers = opts.headers as Record<string, string>;
+    expect(headers["X-API-Key"]).toBeUndefined();
+  });
 });

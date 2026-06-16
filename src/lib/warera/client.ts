@@ -11,8 +11,20 @@ import {
 const DEFAULT_BASE = "https://api2.warera.io/trpc";
 const ORIGIN = "https://app.warera.io";
 
+export interface WareraClientOptions {
+  baseUrl?: string;
+  /** API token de WarEra (Settings → API Tokens). Se envía como header X-API-Key. */
+  apiKey?: string;
+}
+
 export class WareraClient {
-  constructor(private baseUrl: string = DEFAULT_BASE) {}
+  private baseUrl: string;
+  private apiKey?: string;
+
+  constructor(opts: WareraClientOptions = {}) {
+    this.baseUrl = opts.baseUrl ?? DEFAULT_BASE;
+    this.apiKey = opts.apiKey;
+  }
 
   /** Llama un procedimiento tRPC por GET y valida la respuesta. */
   private async call<T extends z.ZodTypeAny>(
@@ -24,9 +36,13 @@ export class WareraClient {
     if (input !== undefined) {
       url += `?input=${encodeURIComponent(JSON.stringify(input))}`;
     }
-    const res = await fetch(url, {
-      headers: { Origin: ORIGIN, "User-Agent": "Mozilla/5.0" },
-    });
+    const headers: Record<string, string> = {
+      Origin: ORIGIN,
+      "User-Agent": "Mozilla/5.0",
+    };
+    if (this.apiKey) headers["X-API-Key"] = this.apiKey;
+
+    const res = await fetch(url, { headers });
     if (!res.ok) {
       throw new Error(`WarEra API ${proc} failed: HTTP ${res.status}`);
     }

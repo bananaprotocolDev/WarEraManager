@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { trpcEnvelope, pricesSchema, companySchema } from "./schemas";
+import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema } from "./schemas";
 
 describe("warera schemas", () => {
   it("desenvuelve la forma tRPC { result: { data } }", () => {
@@ -31,5 +31,39 @@ describe("warera schemas", () => {
       activeUpgradeLevels: { automatedEngine: 2 },
     });
     expect(c.activeUpgradeLevels.breakRoom).toBe(0);
+  });
+});
+
+describe("gameConfigSchema", () => {
+  it("extrae items con defaults tolerantes", () => {
+    const gc = gameConfigSchema.parse({
+      items: {
+        bread: { type: "product", productionPoints: 1, productionNeeds: { grain: 2 } },
+        grain: { type: "raw" },
+        extraTop: "ignorado",
+      },
+    });
+    expect(gc.items.bread.productionNeeds.grain).toBe(2);
+    // grain sin productionPoints/needs → defaults
+    expect(gc.items.grain.productionPoints).toBe(1);
+    expect(gc.items.grain.productionNeeds).toEqual({});
+  });
+});
+
+describe("userLiteSchema", () => {
+  it("parsea id, username y country tolerando extras", () => {
+    const u = userLiteSchema.parse({
+      _id: "u1",
+      username: "majima",
+      country: "co1",
+      skills: { production: { level: 3 } },
+    });
+    expect(u._id).toBe("u1");
+    expect(u.country).toBe("co1");
+  });
+
+  it("acepta country ausente", () => {
+    const u = userLiteSchema.parse({ _id: "u2", username: "x" });
+    expect(u.country).toBeUndefined();
   });
 });

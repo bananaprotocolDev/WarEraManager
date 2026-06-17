@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { LineChart, KeyRound } from "lucide-react";
+import { LineChart, KeyRound, Boxes } from "lucide-react";
 
 export function AppShell({ children, hasToken }: { children: React.ReactNode; hasToken?: boolean }) {
   return (
@@ -14,6 +14,12 @@ export function AppShell({ children, hasToken }: { children: React.ReactNode; ha
             WarEra<span className="text-accent">Manager</span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
+            <Link
+              href="/optimizer"
+              className="flex items-center gap-1.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Boxes className="h-4 w-4" aria-hidden="true" /> Optimizador
+            </Link>
             <Link
               href="/market"
               className="flex items-center gap-1.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

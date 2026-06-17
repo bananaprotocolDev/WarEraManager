@@ -1,26 +1,59 @@
 @import "tailwindcss";
 
+/* Paleta oscura "command center" (adaptada a dark real; ver Plan 4 §reglas). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0e14;
+  --surface: #121822;
+  --surface-2: #1a2230;
+  --border: #232c3b;
+  --foreground: #e6edf3;
+  --muted-foreground: #8b97a7;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --accent: #f59e0b;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --destructive: #ef4444;
+  --ring: #3b82f6;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-destructive: var(--destructive);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-fira-sans);
+  --font-mono: var(--font-fira-code);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--color-border);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Números tabulares para datos */
+.tabular {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

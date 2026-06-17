@@ -51,3 +51,6 @@ nul
 # playwright visual-check artifacts (screenshots dumped at repo root)
 .playwright-mcp/
 /*.png
+
+# local price history db
+/data/

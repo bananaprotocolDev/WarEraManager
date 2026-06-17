@@ -1,16 +1,8 @@
 import type { WareraClient } from "@/lib/warera/client";
-import { companyProfit, hiringAnalysis, toItemDef } from "@/lib/economy";
-import type { ProfitBreakdown } from "@/lib/economy";
-import type { HiringResult } from "@/lib/economy";
+import { toItemDef } from "@/lib/economy";
+import { assembleCompanyReport, type CompanyReport } from "./company-report";
 
-export interface CompanyReport {
-  id: string;
-  itemCode: string;
-  profit: ProfitBreakdown;
-  hiring: HiringResult;
-  /** Atajo: salario máximo a pagar por un trabajador extra. */
-  maxWageToHire: number;
-}
+export type { CompanyReport };
 
 export interface Portfolio {
   userId: string;
@@ -79,10 +71,8 @@ export async function buildPortfolio(
       upgrades: c.activeUpgradeLevels,
     };
 
-    const profit = companyProfit({ company, item, workers, prices, taxes });
-    const hiring = hiringAnalysis({ company, item, prices, taxes, candidateWage: 0 });
-
-    companies.push({ id: c._id, itemCode: c.itemCode, profit, hiring, maxWageToHire: hiring.maxWage });
+    const report = assembleCompanyReport({ company, item, workers, prices, taxes });
+    companies.push(report);
   }
 
   const totalNetProfit = companies.reduce((s, c) => s + c.profit.netProfit, 0);

@@ -7,11 +7,13 @@ import { Spinner } from "@/components/ui/spinner";
 import { usePrices } from "@/lib/client/use-prices";
 import { sortBy, type SortDir } from "@/lib/ui/sort-table";
 import { formatMoney } from "@/lib/format";
+import { PriceTrend } from "@/components/market/price-trend";
 
 export default function MarketPage() {
   const { data, isLoading, isError, error } = usePrices();
   const [query, setQuery] = useState("");
   const [dir, setDir] = useState<SortDir>("desc");
+  const [selected, setSelected] = useState<string | null>(null);
 
   const rows = useMemo(() => {
     const entries = Object.entries(data ?? {}).map(([item, price]) => ({ item, price }));
@@ -32,6 +34,16 @@ export default function MarketPage() {
           className="h-10 flex-1 bg-transparent outline-none"
         />
       </div>
+      {selected ? (
+        <Card className="mb-4 cursor-default">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Tendencia · <span className="font-mono normal-case">{selected}</span>
+          </h2>
+          <PriceTrend item={selected} />
+        </Card>
+      ) : (
+        <p className="mb-4 text-sm text-muted-foreground">Tocá un item para ver su tendencia.</p>
+      )}
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
           <Spinner /> Cargando precios…
@@ -58,14 +70,19 @@ export default function MarketPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.item} className="border-b border-border last:border-0">
+                <tr
+                  key={r.item}
+                  onClick={() => setSelected((s) => (s === r.item ? null : r.item))}
+                  className={`cursor-pointer border-b border-border last:border-0 transition-colors hover:bg-surface-2 ${
+                    selected === r.item ? "bg-surface-2" : ""
+                  }`}
+                >
                   <td className="px-4 py-2.5 font-mono">{r.item}</td>
                   <td className="tabular px-4 py-2.5 text-right">{formatMoney(r.price)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="px-4 py-3 text-xs text-muted-foreground">Las tendencias históricas llegan en el Plan 3.</p>
         </Card>
       )}
     </AppShell>

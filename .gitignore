@@ -47,3 +47,7 @@ next-env.d.ts
 
 # windows reserved device name created by accidental shell redirection
 nul
+
+# playwright visual-check artifacts (screenshots dumped at repo root)
+.playwright-mcp/
+/*.png

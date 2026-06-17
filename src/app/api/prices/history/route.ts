@@ -6,7 +6,9 @@ export async function GET(req: Request): Promise<Response> {
   if (!item) {
     return Response.json({ error: "item is required" }, { status: 400 });
   }
-  const hours = Number(url.searchParams.get("hours") ?? "168"); // 7 días por defecto
+  // 7 días por defecto; ignora valores inválidos (NaN, <=0).
+  const hoursRaw = Number(url.searchParams.get("hours"));
+  const hours = hoursRaw > 0 ? hoursRaw : 168;
   const since = Date.now() - hours * 60 * 60 * 1000;
   const points = getPriceStore().getHistory(item, since);
   return Response.json({ item, points });

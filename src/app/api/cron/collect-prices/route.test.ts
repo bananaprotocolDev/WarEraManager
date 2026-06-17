@@ -34,5 +34,7 @@ describe("GET /api/cron/collect-prices", () => {
       }),
     );
     expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.collected).toBe(3);
   });
 });

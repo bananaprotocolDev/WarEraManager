@@ -33,12 +33,13 @@ export default function OnboardingPage() {
         <form onSubmit={submit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="flex items-center gap-1.5 font-medium">
-              <User className="h-4 w-4" /> User ID <span className="text-destructive">*</span>
+              <User className="h-4 w-4" aria-hidden="true" /> User ID <span className="text-destructive">*</span>
             </span>
             <input
               value={userId}
               onChange={(e) => setUserIdInput(e.target.value)}
               placeholder="6a30f0e6a38931d3ab4ef9cc"
+              autoComplete="off"
               className="tabular h-11 rounded-lg border border-border bg-surface-2 px-4 outline-none focus:ring-2 focus:ring-ring"
               required
             />
@@ -46,13 +47,15 @@ export default function OnboardingPage() {
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="flex items-center gap-1.5 font-medium">
-              <KeyRound className="h-4 w-4" /> API token <span className="text-muted-foreground">(opcional)</span>
+              <KeyRound className="h-4 w-4" aria-hidden="true" /> API token{" "}
+              <span className="text-muted-foreground">(opcional)</span>
             </span>
             <input
               value={token}
               onChange={(e) => setTokenInput(e.target.value)}
               type="password"
               placeholder="Settings → API Tokens"
+              autoComplete="current-password"
               className="h-11 rounded-lg border border-border bg-surface-2 px-4 outline-none focus:ring-2 focus:ring-ring"
             />
             <span className="text-xs text-muted-foreground">

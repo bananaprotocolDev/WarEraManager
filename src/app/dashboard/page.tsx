@@ -36,7 +36,9 @@ export default function DashboardPage() {
         </div>
       ) : isError ? (
         <Card className="cursor-default border-destructive/40">
-          <p className="text-destructive">No se pudo cargar: {(error as Error).message}</p>
+          <p className="text-destructive">
+            No se pudo cargar: {error instanceof Error ? error.message : String(error)}
+          </p>
         </Card>
       ) : data && data.companies.length === 0 ? (
         <Card className="cursor-default text-center text-muted-foreground">
@@ -44,6 +46,7 @@ export default function DashboardPage() {
         </Card>
       ) : data ? (
         <div className="flex flex-col gap-6">
+          <h1 className="text-xl font-bold">Mi cartera</h1>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <StatCard
               label="Total neto / día"

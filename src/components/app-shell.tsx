@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { LineChart, KeyRound } from "lucide-react";
+import { LineChart, KeyRound, Boxes } from "lucide-react";
 
 export function AppShell({ children, hasToken }: { children: React.ReactNode; hasToken?: boolean }) {
   return (
@@ -13,19 +13,32 @@ export function AppShell({ children, hasToken }: { children: React.ReactNode; ha
           >
             WarEra<span className="text-accent">Manager</span>
           </Link>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 text-sm sm:gap-4">
             <Link
-              href="/market"
+              href="/optimizer"
+              aria-label="Optimizador"
               className="flex items-center gap-1.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <LineChart className="h-4 w-4" aria-hidden="true" /> Mercado
+              <Boxes className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Optimizador</span>
+            </Link>
+            <Link
+              href="/market"
+              aria-label="Mercado"
+              className="flex items-center gap-1.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <LineChart className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Mercado</span>
             </Link>
             <Link
               href="/onboarding"
+              aria-label={hasToken ? "Token activo" : "Sin token"}
               className="flex items-center gap-1.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <KeyRound className="h-4 w-4" aria-hidden="true" />
-              <span className={hasToken ? "text-success" : ""}>{hasToken ? "Token activo" : "Sin token"}</span>
+              <span className={`hidden sm:inline ${hasToken ? "text-success" : ""}`}>
+                {hasToken ? "Token activo" : "Sin token"}
+              </span>
             </Link>
           </div>
         </nav>

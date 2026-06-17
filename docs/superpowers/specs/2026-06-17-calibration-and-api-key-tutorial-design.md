@@ -79,17 +79,45 @@ Dos mejoras:
 - Estado de la calibración vigente (factor + fecha) si ya existe.
 - Link "Calibrar" en la nav (`app-shell`).
 
+## 4bis. Parte C — Beneficio al precio actual + tendencia
+
+El precio de lo producido es volátil; el beneficio debe reflejar el **precio de mercado en tiempo
+real** y, además, dar contexto de tendencia (para saber si hoy está caro o barato).
+
+- El **número principal de beneficio/día sigue al precio ACTUAL** (spot) de `itemTrading.getPrices`
+  — "lo que ganarías si vendés hoy". (Ya es así; se mantiene.)
+- El reporte enriquece cada empresa con datos del **item de salida** tomados del
+  `PriceHistoryStore` (Plan 3): `currentPrice`, `avgPrice<N>d` (promedio de la ventana, default 7
+  días) y `trend` ∈ `up | down | flat` (compara `currentPrice` vs el promedio, con un umbral, p.ej.
+  ±3%). `buildPortfolio` y `buildCompanyDetail` reciben el store de precios para calcular esto.
+- **UI:**
+  - Tarjeta de empresa (dashboard) y header del detalle: indicador de tendencia del precio del item
+    (▲ subiendo / ▼ bajando / — estable, con texto, no solo color) + el promedio reciente.
+  - Detalle: además, un mini-gráfico de tendencia del precio del item de salida (reusa el
+    componente `PriceTrend` del Plan 3).
+- Si no hay histórico suficiente para ese item (DB recién iniciada), no se muestra tendencia: solo
+  el precio actual. Sin datos no se inventa nada.
+- **Esto NO cambia la calibración** (que es por unidades, independiente del precio). Calibración y
+  tendencia de precio son ejes ortogonales: una corrige el output real, la otra contextualiza el precio.
+
 ## 5. Componentes / archivos (orientativo)
 
 - `src/lib/db/calibration-store.ts` — interfaz + impl SQLite.
 - `src/server/calibrate.ts` — servicio `runCalibration(client, store, {userId, days})`.
 - `src/lib/economy/get-constants.ts` — `getGameConstants(store)` loader.
 - `src/app/api/calibrate/route.ts` — endpoint (POST/GET con `X-API-Key`).
-- `src/server/portfolio.ts`, `src/server/company-detail.ts` — usar `getGameConstants`.
+- `src/lib/ui/price-trend-stat.ts` — `priceTrend(current, avg, threshold)` puro (up/down/flat).
+- `src/server/portfolio.ts`, `src/server/company-detail.ts` — usar `getGameConstants` + enriquecer
+  con tendencia de precio (leen `PriceHistoryStore`).
 - `src/lib/client/use-calibrate.ts` — hook/acción cliente.
 - `src/app/calibrate/page.tsx` + componentes — UI.
+- `src/components/dashboard/company-card.tsx`, `src/app/company/[id]/page.tsx` — indicador de tendencia.
 - `src/app/onboarding/page.tsx` — sección tutorial.
 - `src/components/app-shell.tsx` — link "Calibrar".
+
+> **Nota de planificación:** por tamaño, la implementación puede dividirse en dos planes:
+> (6A) tutorial de API key + calibración; (6B) beneficio con tendencia de precio. Cada uno entrega
+> software funcional por separado.
 
 ## 6. Criterios de éxito
 
@@ -97,6 +125,8 @@ Dos mejoras:
 - Con token, `/calibrate` trae las ventas reales, calcula el factor, lo guarda y muestra
   teórico vs realizado + confianza.
 - Tras calibrar, el dashboard y el detalle dejan de marcar "estimado" y usan el factor.
+- El beneficio se calcula al precio de mercado **actual** y la UI muestra la **tendencia** del precio
+  del item (actual vs promedio reciente) cuando hay histórico.
 - Sin ventas suficientes, no se fuerza un factor y se informa con claridad.
 - El token nunca se persiste en el servidor (solo se usa por-petición); la calibración guardada es
   un número global (factor), no datos personales.

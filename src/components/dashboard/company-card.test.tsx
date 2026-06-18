@@ -12,9 +12,12 @@ function report(net: number): CompanyReport {
   return {
     id: "c1",
     itemCode: "bread",
-    profit: { unitsPerDay: 10, revenue: 15, inputCost: 2, wageCost: 3, tax: 1.5, netProfit: net, estimated: true },
-    hiring: { marginalUnitsPerDay: 4, marginalValue: 5, maxWage: 5, worthIt: true, estimated: true },
-    maxWageToHire: 5,
+    profit: { dailyProductionRate: 72, usefulRate: 72, revenue: 108, inputCost: 14.4, wageCost: 3, tax: 10.8, netProfit: net, sellAssumed: true, estimated: true },
+    maxWageToHire: 1.17,
+    marginPerUnit: 1.3,
+    stock: 50,
+    storageMax: 200,
+    dailyProductionRate: 72,
   };
 }
 
@@ -23,6 +26,8 @@ describe("CompanyCard", () => {
     render(<CompanyCard company={report(28.4)} />);
     expect(screen.getByText("bread")).toBeInTheDocument();
     expect(screen.getByText("+28.40 /día")).toBeInTheDocument();
+    expect(screen.getByText("Producción/día")).toBeInTheDocument();
+    expect(screen.getByText("Stock")).toBeInTheDocument();
     expect(screen.getAllByText("rentable").length).toBeGreaterThan(0);
   });
 

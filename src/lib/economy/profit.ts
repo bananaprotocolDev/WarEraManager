@@ -1,52 +1,53 @@
-import type { ItemDef, CompanyData, WorkerData, Taxes, PriceMap } from "./types";
-import { GameConstants, GAME_CONSTANTS, unitsPerDay } from "../game-constants";
+import type { ItemDef, PriceMap, Taxes } from "./types";
 
 export interface ProfitBreakdown {
-  unitsPerDay: number;
+  /** Producción diaria total (automatización + trabajadores). */
+  dailyProductionRate: number;
+  /** Tasa efectiva vendible: min(tasa, venta/día). */
+  usefulRate: number;
   revenue: number;
   inputCost: number;
   wageCost: number;
   tax: number;
   netProfit: number;
-  /** true si las constantes del juego no están calibradas (cifra estimada). */
+  /** true si no se proveyó venta/día y se asumió vender todo lo producido. */
+  sellAssumed: boolean;
+  /** true si alguna parte de la cifra es un supuesto (hoy: venta asumida). */
   estimated: boolean;
 }
 
 export function companyProfit(args: {
-  company: CompanyData;
+  dailyProductionRate: number;
+  sellPerDay?: number;
   item: ItemDef;
-  workers: WorkerData[];
   prices: PriceMap;
   taxes: Taxes;
-  constants?: GameConstants;
+  wageCostPerDay?: number;
 }): ProfitBreakdown {
-  const constants = args.constants ?? GAME_CONSTANTS;
-  const units = unitsPerDay(args.company.production, constants);
+  const sellAssumed = args.sellPerDay === undefined;
+  const usefulRate = sellAssumed ? args.dailyProductionRate : Math.min(args.dailyProductionRate, args.sellPerDay as number);
 
   const price = args.prices[args.item.code] ?? 0;
-  const revenue = units * price;
+  const revenue = usefulRate * price;
 
   let inputCost = 0;
   for (const [inputCode, qtyPerUnit] of Object.entries(args.item.productionNeeds)) {
-    const inputPrice = args.prices[inputCode] ?? 0;
-    inputCost += qtyPerUnit * units * inputPrice;
+    inputCost += qtyPerUnit * usefulRate * (args.prices[inputCode] ?? 0);
   }
 
-  const wageCost = args.workers.reduce((sum, w) => sum + w.wage, 0);
-  // Solo se aplica el impuesto de MERCADO: grava las ventas de la empresa en el
-  // mercado. Los impuestos `income` y `selfWork` gravan salarios/autotrabajo, no las
-  // ventas de una empresa, por eso no se aplican acá. A confirmar en la calibración
-  // (ver spec §4). Por eso `Taxes` incluye los tres campos aunque solo se use `market`.
+  const wageCost = args.wageCostPerDay ?? 0;
   const tax = revenue * ((args.taxes.market ?? 0) / 100);
   const netProfit = revenue - inputCost - wageCost - tax;
 
   return {
-    unitsPerDay: units,
+    dailyProductionRate: args.dailyProductionRate,
+    usefulRate,
     revenue,
     inputCost,
     wageCost,
     tax,
     netProfit,
-    estimated: !constants.calibrated,
+    sellAssumed,
+    estimated: sellAssumed,
   };
 }

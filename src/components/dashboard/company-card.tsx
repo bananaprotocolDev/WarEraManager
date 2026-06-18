@@ -28,14 +28,14 @@ export function CompanyCard({ company }: { company: CompanyReport }) {
           {formatPerDay(company.profit.netProfit)}
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <dt>Ingresos</dt>
-          <dd className="tabular text-right text-foreground">{formatMoney(company.profit.revenue)}</dd>
-          <dt>Salarios</dt>
-          <dd className="tabular text-right text-foreground">{formatMoney(company.profit.wageCost)}</dd>
+          <dt>Producción/día</dt>
+          <dd className="tabular text-right text-foreground">{formatMoney(company.dailyProductionRate)}</dd>
+          <dt>Stock</dt>
+          <dd className="tabular text-right text-foreground">{formatMoney(company.stock)} / {formatMoney(company.storageMax)}</dd>
         </dl>
         {company.maxWageToHire > 0 ? (
           <div className="mt-3 flex items-center gap-1.5 text-xs text-accent">
-            <UserPlus className="h-3.5 w-3.5" /> Pagar hasta {formatMoney(company.maxWageToHire)} por trabajador
+            <UserPlus className="h-3.5 w-3.5" aria-hidden="true" /> Pagar hasta {formatMoney(company.maxWageToHire)} /punto
           </div>
         ) : null}
       </Card>

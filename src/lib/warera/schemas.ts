@@ -22,13 +22,15 @@ export const companySchema = z
       .object({
         automatedEngine: z.number().default(0),
         breakRoom: z.number().default(0),
+        storage: z.number().default(0),
       })
       .partial()
       .transform((u) => ({
         automatedEngine: u.automatedEngine ?? 0,
         breakRoom: u.breakRoom ?? 0,
+        storage: u.storage ?? 0,
       }))
-      .default({ automatedEngine: 0, breakRoom: 0 }),
+      .default({ automatedEngine: 0, breakRoom: 0, storage: 0 }),
   })
   .passthrough();
 
@@ -50,6 +52,22 @@ export const gameItemSchema = z
   })
   .passthrough();
 
+const upgradeLevelSchema = z
+  .object({ stats: z.record(z.string(), z.number()).default({}) })
+  .passthrough();
+
+const upgradeSchema = z
+  .object({ levels: z.record(z.string(), upgradeLevelSchema).default({}) })
+  .passthrough();
+
+export const upgradesConfigSchema = z
+  .object({
+    automatedEngine: upgradeSchema.optional(),
+    storage: upgradeSchema.optional(),
+    breakRoom: upgradeSchema.optional(),
+  })
+  .passthrough();
+
 /** gameConfig.getGameConfig → { items: { code: gameItem } }. */
 export const gameConfigSchema = z
   .object({
@@ -67,6 +85,7 @@ export const gameConfigSchema = z
         z.record(z.string(), gameItemSchema),
       )
       .default({}),
+    upgradesConfig: upgradesConfigSchema.default({}),
   })
   .passthrough();
 

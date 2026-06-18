@@ -1,44 +1,20 @@
-import type { ItemDef, CompanyData, Taxes, PriceMap } from "./types";
-import { GameConstants, GAME_CONSTANTS, perWorkerUnitsPerDay } from "../game-constants";
+import type { ItemDef, PriceMap, Taxes } from "./types";
 
-export interface HiringResult {
-  marginalUnitsPerDay: number;
-  /** Valor neto/día que aporta un trabajador extra (ingresos extra - inputs extra - impuesto extra). */
-  marginalValue: number;
-  /** Salario máximo a pagar para que siga conviniendo. */
+export interface MaxWageResult {
+  /** Margen bruto por unidad: precio - costo de insumos por unidad. */
+  marginPerUnit: number;
+  /** Salario máximo por punto de producción = margen neto de impuesto de mercado. */
   maxWage: number;
-  worthIt: boolean;
-  estimated: boolean;
 }
 
-export function hiringAnalysis(args: {
-  company: CompanyData;
-  item: ItemDef;
-  prices: PriceMap;
-  taxes: Taxes;
-  candidateWage: number;
-  constants?: GameConstants;
-}): HiringResult {
-  const constants = args.constants ?? GAME_CONSTANTS;
-  const marginalUnits = perWorkerUnitsPerDay(args.company.production, args.company.workerCount, constants);
-
-  const price = args.prices[args.item.code] ?? 0;
-  const marginalRevenue = marginalUnits * price;
-
-  let marginalInputCost = 0;
-  for (const [inputCode, qtyPerUnit] of Object.entries(args.item.productionNeeds)) {
-    marginalInputCost += qtyPerUnit * marginalUnits * (args.prices[inputCode] ?? 0);
+/** Salario máximo a pagar por punto de producción para que la empresa siga rentable. */
+export function maxWagePerPoint(item: ItemDef, prices: PriceMap, taxes: Taxes): MaxWageResult {
+  const price = prices[item.code] ?? 0;
+  let inputCostPerUnit = 0;
+  for (const [inputCode, qty] of Object.entries(item.productionNeeds)) {
+    inputCostPerUnit += qty * (prices[inputCode] ?? 0);
   }
-
-  // Solo impuesto de mercado sobre las ventas marginales (ver nota en profit.ts).
-  const marginalTax = marginalRevenue * ((args.taxes.market ?? 0) / 100);
-  const marginalValue = marginalRevenue - marginalInputCost - marginalTax;
-
-  return {
-    marginalUnitsPerDay: marginalUnits,
-    marginalValue,
-    maxWage: marginalValue,
-    worthIt: args.candidateWage < marginalValue,
-    estimated: !constants.calibrated,
-  };
+  const marginPerUnit = price - inputCostPerUnit;
+  const maxWage = marginPerUnit * (1 - (taxes.market ?? 0) / 100);
+  return { marginPerUnit, maxWage };
 }

@@ -1,7 +1,6 @@
 import type { WareraClient } from "@/lib/warera/client";
 import { toItemDef } from "@/lib/economy";
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
-import { GAME_CONSTANTS, type GameConstants } from "@/lib/game-constants";
 
 export interface RecipeEntry {
   input: string;
@@ -14,7 +13,7 @@ export interface CompanyDetail {
   report: CompanyReport;
   workers: { wage: number }[];
   wagesAvailable: boolean;
-  upgrades: { automatedEngine: number; breakRoom: number };
+  upgrades: { automatedEngine: number; breakRoom: number; storage: number };
   recipe: RecipeEntry[];
   estimated: boolean;
 }
@@ -23,7 +22,6 @@ export interface BuildCompanyDetailOptions {
   companyId: string;
   userId: string;
   authenticated: boolean;
-  constants?: GameConstants;
 }
 
 /** Detalle completo de una empresa: desglose, trabajadores, upgrades y receta. */
@@ -60,10 +58,10 @@ export async function buildCompanyDetail(
     itemCode: c.itemCode,
     production: c.production,
     workerCount: c.workerCount,
-    upgrades: c.activeUpgradeLevels,
+    upgrades: c.activeUpgradeLevels, // { automatedEngine, breakRoom, storage }
   };
 
-  const report = assembleCompanyReport({ company, item, workers, prices, taxes, constants: opts.constants ?? GAME_CONSTANTS });
+  const report = assembleCompanyReport({ company, item, workers, prices, taxes, upgradesConfig: gameConfig.upgradesConfig });
   const recipe: RecipeEntry[] = Object.entries(item.productionNeeds).map(([input, qtyPerUnit]) => ({
     input,
     qtyPerUnit,
@@ -75,7 +73,7 @@ export async function buildCompanyDetail(
     report,
     workers,
     wagesAvailable,
-    upgrades: c.activeUpgradeLevels,
+    upgrades: c.activeUpgradeLevels, // now { automatedEngine, breakRoom, storage }
     recipe,
     estimated: report.profit.estimated,
   };

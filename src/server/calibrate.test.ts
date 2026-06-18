@@ -4,7 +4,7 @@ import type { CalibrationStore, Calibration } from "@/lib/db/calibration-store";
 
 function fakeStore() {
   let saved: Calibration | null = null;
-  const store: CalibrationStore = { get: () => saved, set: (c) => (saved = c) };
+  const store: CalibrationStore = { get: async () => saved, set: async (c) => { saved = c; } };
   return { store, get: () => saved };
 }
 

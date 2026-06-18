@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import type { SqlExec } from "./price-store";
 
 export interface Calibration {
   factor: number;
@@ -7,39 +7,40 @@ export interface Calibration {
 }
 
 export interface CalibrationStore {
-  get(): Calibration | null;
-  set(c: Calibration): void;
+  get(): Promise<Calibration | null>;
+  set(c: Calibration): Promise<void>;
 }
 
-export class SqliteCalibrationStore implements CalibrationStore {
-  private db: Database.Database;
+export class PostgresCalibrationStore implements CalibrationStore {
+  private schemaReady?: Promise<void>;
 
-  constructor(path = "data/prices.db") {
-    this.db = new Database(path);
-    this.db.pragma("journal_mode = WAL");
-    this.db.exec(
-      `CREATE TABLE IF NOT EXISTS calibration (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        factor REAL NOT NULL,
-        samples INTEGER NOT NULL,
-        updatedAt INTEGER NOT NULL
-      );`,
-    );
-  }
+  constructor(private sql: SqlExec) {}
 
-  get(): Calibration | null {
-    const row = this.db
-      .prepare("SELECT factor, samples, updatedAt FROM calibration WHERE id = 1")
-      .get() as Calibration | undefined;
-    return row ?? null;
-  }
-
-  set(c: Calibration): void {
-    this.db
-      .prepare(
-        `INSERT INTO calibration (id, factor, samples, updatedAt) VALUES (1, ?, ?, ?)
-         ON CONFLICT(id) DO UPDATE SET factor = excluded.factor, samples = excluded.samples, updatedAt = excluded.updatedAt`,
+  private ensureSchema(): Promise<void> {
+    return (this.schemaReady ??= this.sql`
+      CREATE TABLE IF NOT EXISTS calibration (
+        id int PRIMARY KEY,
+        factor double precision NOT NULL,
+        samples int NOT NULL,
+        updated_at bigint NOT NULL
       )
-      .run(c.factor, c.samples, c.updatedAt);
+    `.then(() => {}));
+  }
+
+  async get(): Promise<Calibration | null> {
+    await this.ensureSchema();
+    const rows = await this.sql`SELECT factor, samples, updated_at FROM calibration WHERE id = 1`;
+    if (rows.length === 0) return null;
+    const r = rows[0];
+    return { factor: Number(r.factor), samples: Number(r.samples), updatedAt: Number(r.updated_at) };
+  }
+
+  async set(c: Calibration): Promise<void> {
+    await this.ensureSchema();
+    await this.sql`
+      INSERT INTO calibration (id, factor, samples, updated_at)
+      VALUES (1, ${c.factor}, ${c.samples}, ${c.updatedAt})
+      ON CONFLICT (id) DO UPDATE SET factor = excluded.factor, samples = excluded.samples, updated_at = excluded.updated_at
+    `;
   }
 }

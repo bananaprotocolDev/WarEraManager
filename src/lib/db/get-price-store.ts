@@ -1,16 +1,14 @@
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-import { SqlitePriceStore } from "./price-store";
+import { neon } from "@neondatabase/serverless";
+import { PostgresPriceHistoryStore, type SqlExec } from "./price-store";
 import type { PriceHistoryStore } from "./price-store";
 
 let instance: PriceHistoryStore | null = null;
 
-/** Store de histórico por defecto (SQLite en disco). Crea el directorio si falta. */
 export function getPriceStore(): PriceHistoryStore {
   if (!instance) {
-    const path = process.env.PRICE_DB_PATH ?? "data/prices.db";
-    mkdirSync(dirname(path), { recursive: true });
-    instance = new SqlitePriceStore(path);
+    const url = process.env.DATABASE_URL;
+    if (!url) throw new Error("DATABASE_URL no está configurada");
+    instance = new PostgresPriceHistoryStore(neon(url) as unknown as SqlExec);
   }
   return instance;
 }

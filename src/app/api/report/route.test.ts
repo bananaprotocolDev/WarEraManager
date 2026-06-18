@@ -4,6 +4,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 vi.mock("@/server/portfolio", () => ({
   buildPortfolio: vi.fn(),
 }));
+vi.mock("@/server/calibration-factor", () => ({ getRateFactor: vi.fn(async () => 1) }));
+vi.mock("@/lib/db/get-price-store", () => ({ getPriceStore: vi.fn(() => ({ getHistory: async () => [], recordSnapshot: async () => {}, listItems: async () => [] })) }));
 import { buildPortfolio } from "@/server/portfolio";
 import { GET } from "./route";
 

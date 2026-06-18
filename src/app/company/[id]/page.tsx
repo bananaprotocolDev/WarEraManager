@@ -11,6 +11,8 @@ import { StatusDot } from "@/components/ui/status-dot";
 import { Breakdown } from "@/components/detail/breakdown";
 import { WorkersPanel } from "@/components/detail/workers-panel";
 import { HiringPanel } from "@/components/detail/hiring-panel";
+import { PriceTrendBadge } from "@/components/price-trend-badge";
+import { PriceTrend } from "@/components/market/price-trend";
 import { useCompanyDetail } from "@/lib/client/use-company-detail";
 import { getUserId, getToken } from "@/lib/client/token-store";
 import { companyStatus } from "@/lib/ui/company-status";
@@ -72,6 +74,11 @@ export default function CompanyDetailPage() {
                 {formatPerDay(data.report.profit.netProfit)}
                 {data.estimated ? <span className="ml-2 text-xs text-muted-foreground">estimado</span> : null}
               </div>
+              {data.report.price ? (
+                <div>
+                  <PriceTrendBadge price={data.report.price} />
+                </div>
+              ) : null}
 
               <Card className="cursor-default">
                 <div className="mb-1 flex items-center justify-between text-sm">
@@ -106,6 +113,13 @@ export default function CompanyDetailPage() {
                   <Badge>Sala de descanso: nivel {data.upgrades.breakRoom}</Badge>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">El ROI de mejoras llegará con la calibración.</p>
+              </Card>
+
+              <Card className="cursor-default">
+                <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Tendencia de precio · <span className="font-mono normal-case">{data.itemCode}</span>
+                </h2>
+                <PriceTrend item={data.itemCode} />
               </Card>
 
               {data.recipe.length > 0 ? (

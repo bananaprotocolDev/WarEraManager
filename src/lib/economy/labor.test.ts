@@ -6,6 +6,7 @@ import {
   productionValueForLevel,
   levelForProductionValue,
 } from "./labor";
+import { energyValueForLevel } from "./labor";
 
 describe("labor model", () => {
   it("actionsPerDay = energía × 24 / (regenDividedBy × energyCostPerAction)", () => {
@@ -32,5 +33,12 @@ describe("labor model", () => {
   it("LABOR_CONSTANTS no calibrado por defecto", () => {
     expect(LABOR_CONSTANTS.calibrated).toBe(false);
     expect(LABOR_CONSTANTS.throughputFactor).toBe(1);
+  });
+});
+
+describe("energyValueForLevel", () => {
+  it("30 base, +10 por nivel", () => {
+    expect(energyValueForLevel(0)).toBe(30);
+    expect(energyValueForLevel(5)).toBe(80);
   });
 });

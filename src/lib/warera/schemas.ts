@@ -41,7 +41,15 @@ export const companyListSchema = z.object({
 });
 
 /** worker.getWorkers -> lista de trabajadores con salario. */
-export const workersSchema = z.array(z.object({ wage: z.number() }).passthrough());
+export const workersSchema = z.array(
+  z
+    .object({
+      user: z.string().optional(),
+      wage: z.number(),
+      fidelity: z.number().default(0),
+    })
+    .passthrough(),
+);
 
 /** Un item dentro de gameConfig.items. Tolerante; normaliza campos de producción. */
 export const gameItemSchema = z
@@ -89,12 +97,26 @@ export const gameConfigSchema = z
   })
   .passthrough();
 
+const skillValueSchema = z
+  .object({ value: z.number().default(0) })
+  .partial()
+  .transform((s) => ({ value: s.value ?? 0 }))
+  .default({ value: 0 });
+
 /** user.getUserLite → datos básicos del usuario (incluye su country id). */
 export const userLiteSchema = z
   .object({
     _id: z.string(),
     username: z.string(),
     country: z.string().optional(),
+    skills: z
+      .object({ production: skillValueSchema, energy: skillValueSchema })
+      .partial()
+      .transform((s) => ({
+        production: s.production ?? { value: 0 },
+        energy: s.energy ?? { value: 0 },
+      }))
+      .default({ production: { value: 0 }, energy: { value: 0 } }),
   })
   .passthrough();
 

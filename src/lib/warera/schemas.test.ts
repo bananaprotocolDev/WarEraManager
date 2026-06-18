@@ -135,6 +135,24 @@ describe("workers + userLite skills", () => {
     expect(w[0]).toMatchObject({ user: "u1", wage: 0.5, fidelity: 3 });
     expect(w[1].fidelity).toBe(0);
   });
+  it("workersSchema aplana la forma anidada {workersPerCompany:[{workers}]}", () => {
+    const w = wSchema2.parse({
+      workersPerCompany: [
+        { company: { _id: "c1" }, workers: [{ user: "u1", wage: 0.5, fidelity: 2 }] },
+        { company: { _id: "c2" }, workers: [{ user: "u2", wage: 0.3 }] },
+      ],
+    });
+    expect(w).toHaveLength(2);
+    expect(w[0]).toMatchObject({ user: "u1", wage: 0.5, fidelity: 2 });
+    expect(w[1].user).toBe("u2");
+  });
+  it("workersSchema acepta la forma {workers:[...]}", () => {
+    const w = wSchema2.parse({ workers: [{ user: "u1", wage: 1, fidelity: 0 }] });
+    expect(w).toHaveLength(1);
+  });
+  it("workersSchema ante forma desconocida → []", () => {
+    expect(wSchema2.parse({ algo: "raro" })).toEqual([]);
+  });
   it("userLiteSchema parsea skills.production.value y energy.value", () => {
     const u = ulSchema2.parse({ _id: "u1", username: "x", skills: { production: { value: 25 }, energy: { value: 80 } } });
     expect(u.skills.production.value).toBe(25);

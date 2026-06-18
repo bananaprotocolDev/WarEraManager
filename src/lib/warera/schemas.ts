@@ -40,16 +40,32 @@ export const companyListSchema = z.object({
   nextCursor: z.string().nullable().optional(),
 });
 
-/** worker.getWorkers -> lista de trabajadores con salario. */
-export const workersSchema = z.array(
-  z
-    .object({
-      user: z.string().optional(),
-      wage: z.number(),
-      fidelity: z.number().default(0),
-    })
-    .passthrough(),
-);
+const workerItemSchema = z
+  .object({
+    user: z.string().optional(),
+    wage: z.number().default(0),
+    fidelity: z.number().default(0),
+  })
+  .passthrough();
+
+/**
+ * worker.getWorkers -> lista de trabajadores. La API puede devolver la lista en distintas
+ * formas (array plano, `{workers:[...]}`, o `{workersPerCompany:[{workers:[...]}]}`); se
+ * extrae la lista de trabajadores donde esté antes de validar, para no romper.
+ */
+export const workersSchema = z.preprocess((val) => {
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === "object") {
+    const o = val as Record<string, unknown>;
+    if (Array.isArray(o.workers)) return o.workers;
+    if (Array.isArray(o.workersPerCompany)) {
+      return (o.workersPerCompany as Array<{ workers?: unknown }>).flatMap((w) =>
+        Array.isArray(w.workers) ? w.workers : [],
+      );
+    }
+  }
+  return [];
+}, z.array(workerItemSchema));
 
 /** Un item dentro de gameConfig.items. Tolerante; normaliza campos de producción. */
 export const gameItemSchema = z

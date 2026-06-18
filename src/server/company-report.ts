@@ -1,27 +1,63 @@
-import { companyProfit, hiringAnalysis } from "@/lib/economy";
-import type { ItemDef, CompanyData, WorkerData, Taxes, PriceMap, ProfitBreakdown, HiringResult } from "@/lib/economy";
-import { GAME_CONSTANTS, type GameConstants } from "@/lib/game-constants";
+import { companyProfit, maxWagePerPoint, automationDailyProd, storageMax } from "@/lib/economy";
+import type { ItemDef, WorkerData, Taxes, PriceMap, ProfitBreakdown } from "@/lib/economy";
+import type { UpgradesConfig } from "@/lib/economy";
+
+export interface ReportCompany {
+  id: string;
+  itemCode: string;
+  production: number; // stock actual
+  workerCount: number;
+  upgrades: { automatedEngine: number; breakRoom: number; storage: number };
+}
 
 export interface CompanyReport {
   id: string;
   itemCode: string;
   profit: ProfitBreakdown;
-  hiring: HiringResult;
-  /** Atajo: salario máximo a pagar por un trabajador extra. */
+  /** Salario máximo por punto (margen neto de impuesto). */
   maxWageToHire: number;
+  marginPerUnit: number;
+  /** Stock actual en almacén. */
+  stock: number;
+  /** Tope del almacén. */
+  storageMax: number;
+  /** Tasa de producción diaria (automatización en 7A; + trabajadores en 7B). */
+  dailyProductionRate: number;
 }
 
-/** Calcula el reporte económico de UNA empresa (puro, sin I/O). */
+/** Reporte económico de UNA empresa con el modelo de tasa diaria (puro). */
 export function assembleCompanyReport(args: {
-  company: CompanyData;
+  company: ReportCompany;
   item: ItemDef;
   workers: WorkerData[];
   prices: PriceMap;
   taxes: Taxes;
-  constants?: GameConstants;
+  upgradesConfig: UpgradesConfig;
+  /** Venta real/día (7B). Si falta, se asume vender todo lo producido. */
+  sellPerDay?: number;
 }): CompanyReport {
-  const constants = args.constants ?? GAME_CONSTANTS;
-  const profit = companyProfit({ company: args.company, item: args.item, workers: args.workers, prices: args.prices, taxes: args.taxes, constants });
-  const hiring = hiringAnalysis({ company: args.company, item: args.item, prices: args.prices, taxes: args.taxes, candidateWage: 0, constants });
-  return { id: args.company.id, itemCode: args.company.itemCode, profit, hiring, maxWageToHire: hiring.maxWage };
+  const dailyProductionRate = automationDailyProd(args.upgradesConfig, args.company.upgrades.automatedEngine);
+  const wageCostPerDay = args.workers.reduce((sum, w) => sum + w.wage, 0);
+
+  const profit = companyProfit({
+    dailyProductionRate,
+    sellPerDay: args.sellPerDay,
+    item: args.item,
+    prices: args.prices,
+    taxes: args.taxes,
+    wageCostPerDay,
+  });
+
+  const mw = maxWagePerPoint(args.item, args.prices, args.taxes);
+
+  return {
+    id: args.company.id,
+    itemCode: args.company.itemCode,
+    profit,
+    maxWageToHire: mw.maxWage,
+    marginPerUnit: mw.marginPerUnit,
+    stock: args.company.production,
+    storageMax: storageMax(args.upgradesConfig, args.company.upgrades.storage),
+    dailyProductionRate,
+  };
 }

@@ -1,18 +1,35 @@
 import { describe, it, expect } from "vitest";
 import { assembleCompanyReport } from "./company-report";
-import type { ItemDef, Taxes, PriceMap } from "@/lib/economy";
+import type { ItemDef, PriceMap, Taxes } from "@/lib/economy";
 
 const bread: ItemDef = { code: "bread", type: "product", productionPoints: 1, productionNeeds: { grain: 2 } };
-const company = { id: "c1", itemCode: "bread", production: 10, workerCount: 2, upgrades: { automatedEngine: 0, breakRoom: 0 } };
 const prices: PriceMap = { bread: 1.5, grain: 0.1 };
 const taxes: Taxes = { income: 0, market: 10, selfWork: 0 };
+const upgradesConfig = {
+  automatedEngine: { levels: { "3": { stats: { dailyProd: 72 } } } },
+  storage: { levels: { "1": { stats: { maxProduction: 200 } } } },
+};
+const company = {
+  id: "c1",
+  itemCode: "bread",
+  production: 191, // stock
+  workerCount: 0,
+  upgrades: { automatedEngine: 3, breakRoom: 1, storage: 1 },
+};
 
 describe("assembleCompanyReport", () => {
-  it("arma profit + hiring + maxWageToHire", () => {
-    const r = assembleCompanyReport({ company, item: bread, workers: [{ wage: 1 }, { wage: 2 }], prices, taxes });
-    expect(r.id).toBe("c1");
-    expect(r.itemCode).toBe("bread");
-    expect(r.profit.netProfit).toBeCloseTo(8.5);
-    expect(r.maxWageToHire).toBeCloseTo(r.hiring.maxWage);
+  it("usa tasa de automatización (no el stock) y expone stock/almacén/maxWage", () => {
+    const r = assembleCompanyReport({ company, item: bread, workers: [], prices, taxes, upgradesConfig });
+    expect(r.dailyProductionRate).toBe(72); // automatedEngine L3, NO el stock 191
+    expect(r.profit.revenue).toBeCloseTo(108); // 72*1.5
+    expect(r.stock).toBe(191);
+    expect(r.storageMax).toBe(200);
+    expect(r.maxWageToHire).toBeCloseTo(1.17); // margen 1.3 - 10%
+    expect(r.marginPerUnit).toBeCloseTo(1.3);
+  });
+
+  it("suma salarios de trabajadores como costo diario", () => {
+    const r = assembleCompanyReport({ company, item: bread, workers: [{ wage: 2 }, { wage: 3 }], prices, taxes, upgradesConfig });
+    expect(r.profit.wageCost).toBe(5);
   });
 });

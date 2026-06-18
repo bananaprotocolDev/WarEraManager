@@ -52,5 +52,3 @@ nul
 .playwright-mcp/
 /*.png
 
-# local price history db
-/data/

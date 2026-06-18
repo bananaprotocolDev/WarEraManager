@@ -13,7 +13,7 @@ import { WorkersPanel } from "@/components/detail/workers-panel";
 import { useCompanyDetail } from "@/lib/client/use-company-detail";
 import { getUserId, getToken } from "@/lib/client/token-store";
 import { companyStatus } from "@/lib/ui/company-status";
-import { formatPerDay } from "@/lib/format";
+import { formatPerDay, formatMoney } from "@/lib/format";
 
 const LABEL = { good: "rentable", low: "margen bajo", loss: "en pérdida" } as const;
 
@@ -71,6 +71,19 @@ export default function CompanyDetailPage() {
                 {formatPerDay(data.report.profit.netProfit)}
                 {data.estimated ? <span className="ml-2 text-xs text-muted-foreground">estimado</span> : null}
               </div>
+
+              <Card className="cursor-default">
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Almacén</span>
+                  <span className="tabular">{formatMoney(data.report.stock)} / {formatMoney(data.report.storageMax)}</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${data.report.storageMax > 0 ? Math.min(100, (data.report.stock / data.report.storageMax) * 100) : 0}%` }}
+                  />
+                </div>
+              </Card>
 
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <Breakdown profit={data.report.profit} />

@@ -20,6 +20,8 @@ export function Breakdown({ profit }: { profit: ProfitBreakdown }) {
   return (
     <Card className="cursor-default">
       <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Desglose diario</h2>
+      <Row label="Producción/día" value={formatMoney(profit.dailyProductionRate)} />
+      <Row label="Vendible/día" value={formatMoney(profit.usefulRate)} />
       <Row label="Ingresos" value={formatMoney(profit.revenue)} />
       <Row label="Materiales" value={formatCost(profit.inputCost)} />
       <Row label="Salarios" value={formatCost(profit.wageCost)} />

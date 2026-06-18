@@ -9,6 +9,7 @@ import {
   gameConfigSchema,
   userLiteSchema,
   transactionsPageSchema,
+  workOffersPageSchema,
 } from "./schemas";
 
 const DEFAULT_BASE = "https://api2.warera.io/trpc";
@@ -87,6 +88,15 @@ export class WareraClient {
       itemCode,
       limit: 100,
       ...(cursor ? { cursor } : {}),
+    });
+  }
+
+  getWorkOffers(opts: { regionId?: string; energy?: number; production?: number; limit?: number } = {}) {
+    return this.call("workOffer.getWorkOffersPaginated", workOffersPageSchema, {
+      ...(opts.regionId ? { regionId: opts.regionId } : {}),
+      energy: opts.energy ?? 0,
+      production: opts.production ?? 0,
+      limit: opts.limit ?? 20,
     });
   }
 }

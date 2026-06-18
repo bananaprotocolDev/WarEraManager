@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/ui/status-dot";
 import { Breakdown } from "@/components/detail/breakdown";
 import { WorkersPanel } from "@/components/detail/workers-panel";
+import { HiringPanel } from "@/components/detail/hiring-panel";
 import { useCompanyDetail } from "@/lib/client/use-company-detail";
 import { getUserId, getToken } from "@/lib/client/token-store";
 import { companyStatus } from "@/lib/ui/company-status";
@@ -93,6 +94,8 @@ export default function CompanyDetailPage() {
                   maxWage={data.report.maxWageToHire}
                 />
               </div>
+
+              <HiringPanel hiring={data.hiring} />
 
               <Card className="cursor-default">
                 <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

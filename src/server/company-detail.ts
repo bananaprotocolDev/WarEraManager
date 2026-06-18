@@ -1,6 +1,14 @@
 import type { WareraClient } from "@/lib/warera/client";
-import { toItemDef } from "@/lib/economy";
+import {
+  toItemDef,
+  maxWorkers,
+  LABOR_CONSTANTS,
+  summarizeLaborMarket,
+  hiringRecommendation,
+  type HiringRecommendation,
+} from "@/lib/economy";
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
+import { realizedSalesPerDay } from "./sell-rate";
 
 export interface RecipeEntry {
   input: string;
@@ -16,6 +24,8 @@ export interface CompanyDetail {
   upgrades: { automatedEngine: number; breakRoom: number; storage: number };
   recipe: RecipeEntry[];
   estimated: boolean;
+  hiring: HiringRecommendation;
+  sellPerDay: number | null;
 }
 
 export interface BuildCompanyDetailOptions {
@@ -61,7 +71,30 @@ export async function buildCompanyDetail(
     upgrades: c.activeUpgradeLevels, // { automatedEngine, breakRoom, storage }
   };
 
-  const report = assembleCompanyReport({ company, item, workers, prices, taxes, upgradesConfig: gameConfig.upgradesConfig });
+  const sellPerDay = opts.authenticated
+    ? await realizedSalesPerDay(client, opts.userId, c.itemCode, 7)
+    : null;
+
+  // Recalcular el report con sellPerDay si lo conocemos (afecta usefulRate).
+  const reportWithSell = assembleCompanyReport({
+    company, item, workers, prices, taxes,
+    upgradesConfig: gameConfig.upgradesConfig,
+    sellPerDay: sellPerDay ?? undefined,
+  });
+
+  const offers = await client.getWorkOffers({ limit: 20 }).then((r) => r.items).catch(() => []);
+  const market = summarizeLaborMarket(offers);
+  const slots = maxWorkers(gameConfig.upgradesConfig, c.activeUpgradeLevels.breakRoom);
+  const hiring = hiringRecommendation({
+    marginPerUnit: reportWithSell.marginPerUnit,
+    maxWagePerPoint: reportWithSell.maxWageToHire,
+    currentDailyRate: reportWithSell.dailyProductionRate,
+    freeSlots: Math.max(0, slots - c.workerCount),
+    sellPerDay: sellPerDay ?? undefined,
+    market,
+    laborConstants: LABOR_CONSTANTS,
+  });
+
   const recipe: RecipeEntry[] = Object.entries(item.productionNeeds).map(([input, qtyPerUnit]) => ({
     input,
     qtyPerUnit,
@@ -70,11 +103,13 @@ export async function buildCompanyDetail(
   return {
     id: c._id,
     itemCode: c.itemCode,
-    report,
+    report: reportWithSell,
     workers,
     wagesAvailable,
     upgrades: c.activeUpgradeLevels, // now { automatedEngine, breakRoom, storage }
     recipe,
-    estimated: report.profit.estimated,
+    estimated: reportWithSell.profit.estimated,
+    hiring,
+    sellPerDay,
   };
 }

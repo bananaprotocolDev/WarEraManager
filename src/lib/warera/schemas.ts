@@ -114,6 +114,22 @@ export const transactionsPageSchema = z.object({
   nextCursor: z.string().nullable().optional(),
 });
 
+/** Oferta laboral (de workOffer.getWorkOffersPaginated). */
+export const workOfferSchema = z
+  .object({
+    wage: z.number().optional(),
+    minEnergy: z.number().optional(),
+    minProduction: z.number().optional(),
+    minLevel: z.number().optional(),
+    region: z.string().optional(),
+  })
+  .passthrough();
+
+export const workOffersPageSchema = z.object({
+  items: z.array(workOfferSchema),
+  nextCursor: z.string().nullable().optional(),
+});
+
 /** country.getCountryById -> impuestos. */
 export const countrySchema = z
   .object({

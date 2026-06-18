@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, User } from "lucide-react";
+import { KeyRound, User, HelpCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { setUserId, setToken, clearToken } from "@/lib/client/token-store";
@@ -67,6 +67,22 @@ export default function OnboardingPage() {
           </Button>
         </form>
       </Card>
+      <details className="mt-4 rounded-lg border border-border bg-surface p-4 text-sm">
+        <summary className="flex cursor-pointer items-center gap-1.5 font-medium">
+          <HelpCircle className="h-4 w-4" aria-hidden="true" /> ¿Cómo consigo mi API token?
+        </summary>
+        <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-muted-foreground">
+          <li>Iniciá sesión en <span className="font-mono">app.warera.io</span>.</li>
+          <li>Abrí <span className="text-foreground">Settings</span> (Configuración) desde tu perfil.</li>
+          <li>Entrá a la sección <span className="text-foreground">API Tokens</span>.</li>
+          <li>Creá un token nuevo y copialo.</li>
+          <li>Pegalo en el campo <span className="text-foreground">API token</span> de arriba.</li>
+        </ol>
+        <p className="mt-3 text-xs text-muted-foreground">
+          El token es de solo lectura y se guarda únicamente en esta pestaña del navegador. Sin token
+          igual ves tus empresas; con token se incluyen los salarios y podés calibrar.
+        </p>
+      </details>
     </div>
   );
 }

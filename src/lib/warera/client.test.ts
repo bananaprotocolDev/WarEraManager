@@ -95,4 +95,13 @@ describe("WareraClient", () => {
     const opts = spy.mock.calls[0][1] as RequestInit;
     expect((opts.headers as Record<string, string>)["X-API-Key"]).toBe("tok");
   });
+
+  it("getWorkOffers envía filtros y parsea", async () => {
+    const spy = mockFetchOnce({ items: [{ wage: 0.15, minEnergy: 50, minProduction: 50 }], nextCursor: null });
+    const client = new WareraClient();
+    const r = await client.getWorkOffers({ regionId: "r1", limit: 20 });
+    expect(r.items[0].minEnergy).toBe(50);
+    const url = spy.mock.calls[0][0] as string;
+    expect(url).toContain("workOffer.getWorkOffersPaginated");
+  });
 });

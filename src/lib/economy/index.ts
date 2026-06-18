@@ -6,3 +6,4 @@ export * from "./upgrade";
 export * from "./item-def";
 export * from "./upgrades";
 export * from "./labor";
+export * from "./labor-market";

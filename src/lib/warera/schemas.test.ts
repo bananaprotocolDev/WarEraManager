@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema, transactionsPageSchema } from "./schemas";
+import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema, transactionsPageSchema, workOffersPageSchema } from "./schemas";
 import { gameConfigSchema as gcSchema2, companySchema as cSchema2 } from "./schemas";
 
 describe("warera schemas", () => {
@@ -114,5 +114,16 @@ describe("transactionsPageSchema", () => {
   it("tolera items vacíos y sin cursor", () => {
     const p = transactionsPageSchema.parse({ items: [] });
     expect(p.items).toEqual([]);
+  });
+});
+
+describe("workOffersPageSchema", () => {
+  it("parsea ofertas con wage/minEnergy/minProduction", () => {
+    const p = workOffersPageSchema.parse({
+      items: [{ wage: 0.153, minEnergy: 50, minProduction: 50, region: "r1", extra: 1 }],
+      nextCursor: null,
+    });
+    expect(p.items[0].wage).toBeCloseTo(0.153);
+    expect(p.items[0].minProduction).toBe(50);
   });
 });

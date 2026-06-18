@@ -30,25 +30,34 @@ export async function runCalibration(
   const since = now - opts.days * 24 * 60 * 60 * 1000;
 
   const list = await client.getUserCompanies(opts.userId);
+
+  // Agrupar producción por itemCode: si hay varias empresas del mismo item, sus ventas
+  // son las mismas transacciones; consultarlas una sola vez evita el doble conteo.
+  const productionByItem = new Map<string, number>();
+  for (const companyId of list.items) {
+    const c = await client.getCompanyById(companyId);
+    if (c.production <= 0) continue;
+    productionByItem.set(c.itemCode, (productionByItem.get(c.itemCode) ?? 0) + c.production);
+  }
+
   const rows: CalibrationRow[] = [];
   let totalProduction = 0;
   let totalRealized = 0;
   let samples = 0;
 
-  for (const companyId of list.items) {
-    const c = await client.getCompanyById(companyId);
-    if (c.production <= 0) continue;
-
-    // Sumar unidades vendidas por el usuario dentro de la ventana (paginando).
+  for (const [itemCode, production] of productionByItem) {
+    // Sumar unidades vendidas por el usuario dentro de la ventana (paginando, una vez por item).
+    // Asunción: la API pagina las transacciones de la más nueva a la más vieja.
     let soldQty = 0;
     let hadSale = false;
     let cursor: string | undefined;
     for (let page = 0; page < MAX_PAGES; page++) {
-      const res = await client.getUserItemTransactions(opts.userId, c.itemCode, cursor);
+      const res = await client.getUserItemTransactions(opts.userId, itemCode, cursor);
       let reachedOld = false;
       for (const tx of res.items) {
         const ts = tx.createdAt ? Date.parse(tx.createdAt) : NaN;
-        if (!Number.isNaN(ts) && ts < since) {
+        if (Number.isNaN(ts)) continue; // sin fecha válida: no se cuenta
+        if (ts < since) {
           reachedOld = true;
           continue;
         }
@@ -62,9 +71,9 @@ export async function runCalibration(
     }
 
     const realizedPerDay = soldQty / opts.days;
-    rows.push({ itemCode: c.itemCode, productionPerDay: c.production, realizedPerDay });
+    rows.push({ itemCode, productionPerDay: production, realizedPerDay });
     if (hadSale) {
-      totalProduction += c.production;
+      totalProduction += production;
       totalRealized += realizedPerDay;
       samples++;
     }

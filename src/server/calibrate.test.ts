@@ -48,6 +48,27 @@ describe("runCalibration", () => {
     expect(get()).toBeNull();
   });
 
+  it("no duplica ventas si hay varias empresas del mismo item (agrupa por itemCode)", async () => {
+    const { store } = fakeStore();
+    let txCalls = 0;
+    const client = fakeClient({
+      getUserCompanies: async () => ({ items: ["c1", "c2"] }), // dos empresas de steel
+      getCompanyById: async () => ({ _id: "c", itemCode: "steel", production: 100, workerCount: 0, activeUpgradeLevels: { automatedEngine: 0, breakRoom: 0 } }),
+      getUserItemTransactions: async () => {
+        txCalls++;
+        return { items: [{ sellerId: "u1", quantity: 350, createdAt: recent }], nextCursor: null };
+      },
+    });
+    const r = await runCalibration(client, store, { userId: "u1", days: 7, now: NOW });
+    expect(r.ok).toBe(true);
+    if (!r.ok) throw new Error("expected ok");
+    // Las ventas (350/7=50/día) se cuentan UNA vez; producción agregada = 200 → factor 0.25.
+    expect(txCalls).toBe(1);
+    expect(r.factor).toBeCloseTo(0.25);
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]).toMatchObject({ itemCode: "steel", productionPerDay: 200, realizedPerDay: 50 });
+  });
+
   it("ignora transacciones fuera de la ventana", async () => {
     const { store } = fakeStore();
     const old = "2026-01-01T00:00:00.000Z";

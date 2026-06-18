@@ -13,8 +13,14 @@ function fakeClient(overrides: Partial<Record<string, unknown>> = {}) {
     getPrices: async () => ({ bread: 1.5, grain: 0.1 }),
     getGameConfig: async () => ({
       items: { bread: { type: "product", productionPoints: 1, productionNeeds: { grain: 2 } } },
-      upgradesConfig: { automatedEngine: { levels: { "3": { stats: { dailyProd: 72 } } } }, storage: { levels: { "1": { stats: { maxProduction: 200 } } } } },
+      upgradesConfig: {
+        automatedEngine: { levels: { "3": { stats: { dailyProd: 72 } } } },
+        storage: { levels: { "1": { stats: { maxProduction: 200 } } } },
+        breakRoom: { levels: { "1": { stats: { maxWorkers: 2 } } } },
+      },
     }),
+    getWorkOffers: async () => ({ items: [{ wage: 0.5, minEnergy: 50, minProduction: 50 }], nextCursor: null }),
+    getUserItemTransactions: async () => ({ items: [], nextCursor: null }),
     ...overrides,
   } as never;
 }
@@ -39,5 +45,14 @@ describe("buildCompanyDetail", () => {
     expect(called).toBe(false);
     expect(d.workers).toEqual([]);
     expect(d.wagesAvailable).toBe(false);
+    expect(d.sellPerDay).toBeNull();
+  });
+
+  it("incluye la recomendación de contratación", async () => {
+    const d = await buildCompanyDetail(fakeClient(), { companyId: "c1", userId: "u1", authenticated: true });
+    expect(d.hiring).toBeDefined();
+    expect(typeof d.hiring.viable).toBe("boolean");
+    expect(d.hiring.maxWagePerPoint).toBeCloseTo(d.report.maxWageToHire);
+    expect(d.hiring.freeSlots).toBe(0); // maxWorkers 2 - workerCount 2 = 0
   });
 });

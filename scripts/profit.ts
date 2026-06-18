@@ -5,7 +5,7 @@
  * NOTA: las cifras son ESTIMADAS hasta calibrar game-constants (ver spec §4).
  */
 import { WareraClient } from "../src/lib/warera/client";
-import { companyProfit, toItemDef } from "../src/lib/economy";
+import { companyProfit, toItemDef, automationDailyProd } from "../src/lib/economy";
 import type { ItemDef } from "../src/lib/economy";
 
 async function main() {
@@ -45,13 +45,12 @@ async function main() {
     }
     const item = itemDef(c.itemCode);
     const wageCostPerDay = workers.reduce((sum, w) => sum + w.wage, 0);
-    const p = companyProfit({
-      dailyProductionRate: 0, // placeholder — use buildPortfolio for real rate
-      item,
-      prices,
-      taxes,
-      wageCostPerDay,
-    });
+    // Tasa diaria = automatización (Plan 7A). El aporte de trabajadores llega en el Plan 7B.
+    const dailyProductionRate = automationDailyProd(
+      gameConfig.upgradesConfig,
+      c.activeUpgradeLevels.automatedEngine,
+    );
+    const p = companyProfit({ dailyProductionRate, item, prices, taxes, wageCostPerDay });
     total += p.netProfit;
     console.log(
       `${c.itemCode.padEnd(12)} neto/día=${p.netProfit.toFixed(2)}  ` +

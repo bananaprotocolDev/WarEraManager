@@ -10,6 +10,8 @@ describe("Breakdown", () => {
         profit={{ dailyProductionRate: 72, usefulRate: 72, revenue: 15, inputCost: 2, wageCost: 3, tax: 1.5, netProfit: 8.5, sellAssumed: true, estimated: true }}
       />,
     );
+    expect(screen.getByText("Producción/día")).toBeInTheDocument();
+    expect(screen.getByText("Vendible/día")).toBeInTheDocument();
     expect(screen.getByText("Ingresos")).toBeInTheDocument();
     expect(screen.getByText("+8.50 /día")).toBeInTheDocument();
   });

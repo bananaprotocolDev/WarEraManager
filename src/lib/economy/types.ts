@@ -10,16 +10,6 @@ export interface ItemDef {
   productionNeeds: Record<string, number>;
 }
 
-/** Datos de una empresa (de company.getById). */
-export interface CompanyData {
-  id: string;
-  itemCode: string;
-  /** Campo `production` crudo de la API. Se convierte a unidades/día vía constantes. */
-  production: number;
-  workerCount: number;
-  upgrades: { automatedEngine: number; breakRoom: number };
-}
-
 /** Trabajador (de worker.getWorkers). */
 export interface WorkerData {
   wage: number;

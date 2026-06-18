@@ -88,7 +88,6 @@ export async function buildCompanyDetail(
   const hiring = hiringRecommendation({
     marginPerUnit: reportWithSell.marginPerUnit,
     maxWagePerPoint: reportWithSell.maxWageToHire,
-    automationDailyProd: reportWithSell.dailyProductionRate,
     currentDailyRate: reportWithSell.dailyProductionRate,
     freeSlots: Math.max(0, slots - c.workerCount),
     sellPerDay: sellPerDay ?? undefined,

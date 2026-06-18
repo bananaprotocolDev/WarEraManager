@@ -5,7 +5,6 @@ import { LABOR_CONSTANTS } from "./labor";
 const base = {
   marginPerUnit: 1.3,
   maxWagePerPoint: 1.17,
-  automationDailyProd: 72,
   currentDailyRate: 72,
   freeSlots: 2,
   laborConstants: LABOR_CONSTANTS,
@@ -34,6 +33,7 @@ describe("hiringRecommendation", () => {
   it("viable con demanda: salario máx, salario sugerido ≤ máx y perfil del mercado", () => {
     const r = hiringRecommendation({ ...base, sellPerDay: 200 }); // headroom 128
     expect(r.viable).toBe(true);
+    expect(r.demandKnown).toBe(true);
     expect(r.maxWagePerPoint).toBeCloseTo(1.17);
     expect(r.suggestedWage).toBeLessThanOrEqual(1.17);
     expect(r.suggestedWage).toBeGreaterThan(0);

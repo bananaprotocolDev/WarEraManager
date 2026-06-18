@@ -27,7 +27,7 @@ const EMPTY_PROFILE: RecommendedProfile = { minProduction: 0, minEnergy: 0, minL
 export function hiringRecommendation(args: {
   marginPerUnit: number;
   maxWagePerPoint: number;
-  automationDailyProd: number;
+  /** Tasa de producción diaria actual (automatización + trabajadores). */
   currentDailyRate: number;
   freeSlots: number;
   sellPerDay?: number;

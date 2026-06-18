@@ -18,6 +18,14 @@ describe("realizedSalesPerDay", () => {
     expect(r).toBeCloseTo(50); // 350/7
   });
 
+  it("ignora transacciones sin fecha (createdAt ausente)", async () => {
+    const r = await realizedSalesPerDay(client([
+      { sellerId: "u1", quantity: 999 }, // sin createdAt → se ignora
+      { sellerId: "u1", quantity: 70, createdAt: recent },
+    ]), "u1", "steel", 7, NOW);
+    expect(r).toBeCloseTo(10); // solo 70/7
+  });
+
   it("sin ventas → null", async () => {
     const r = await realizedSalesPerDay(client([{ sellerId: "u1", quantity: 5, createdAt: old }]), "u1", "steel", 7, NOW);
     expect(r).toBeNull();

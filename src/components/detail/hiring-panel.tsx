@@ -39,7 +39,12 @@ export function HiringPanel({ hiring }: { hiring: HiringRecommendation }) {
           <dt className="text-muted-foreground">Slots libres</dt>
           <dd className="tabular text-right">{hiring.freeSlots}</dd>
           <dt className="text-muted-foreground">Ganancia extra/día (est.)</dt>
-          <dd className="tabular text-right text-success">{formatMoney(hiring.expectedDailyGain)}</dd>
+          <dd className="tabular text-right text-success">
+            {formatMoney(hiring.expectedDailyGain)}
+            {!hiring.demandKnown ? (
+              <span className="ml-1 text-xs font-sans text-muted-foreground">(supuesto)</span>
+            ) : null}
+          </dd>
         </dl>
       ) : null}
 

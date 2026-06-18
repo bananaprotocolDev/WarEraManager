@@ -19,7 +19,7 @@ export async function GET(
       companyId: id,
       userId,
       authenticated: Boolean(apiKey),
-      rateFactor: getRateFactor(),
+      rateFactor: await getRateFactor(),
       priceStore: getPriceStore(),
     });
     return Response.json(detail);

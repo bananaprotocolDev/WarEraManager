@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 vi.mock("@/server/company-detail", () => ({ buildCompanyDetail: vi.fn() }));
+vi.mock("@/server/calibration-factor", () => ({ getRateFactor: vi.fn(async () => 1) }));
+vi.mock("@/lib/db/get-price-store", () => ({ getPriceStore: vi.fn(() => ({ getHistory: async () => [], recordSnapshot: async () => {}, listItems: async () => [] })) }));
 import { buildCompanyDetail } from "@/server/company-detail";
 import { GET } from "./route";
 

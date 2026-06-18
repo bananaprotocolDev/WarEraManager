@@ -60,7 +60,7 @@ describe("buildCompanyDetail", () => {
   });
 
   it("incluye tendencia de precio si se inyecta el store", async () => {
-    const priceStore = { getHistory: () => [{ ts: 1, price: 1.0 }, { ts: 2, price: 1.0 }], recordSnapshot: () => {}, listItems: () => [] } as never;
+    const priceStore = { getHistory: async () => [{ ts: 1, price: 1.0 }, { ts: 2, price: 1.0 }], recordSnapshot: async () => {}, listItems: async () => [] } as never;
     const d = await buildCompanyDetail(fakeClient(), { companyId: "c1", userId: "u1", authenticated: true, priceStore });
     // precio actual bread 1.5 vs prom 1.0 → up
     expect(d.report.price?.trend).toBe("up");

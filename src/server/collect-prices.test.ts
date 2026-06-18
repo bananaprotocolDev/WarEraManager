@@ -5,9 +5,9 @@ import type { PriceHistoryStore, PricePoint } from "@/lib/db/price-store";
 function fakeStore() {
   const snaps: { prices: Record<string, number>; ts?: number }[] = [];
   const store: PriceHistoryStore = {
-    recordSnapshot: (prices, ts) => snaps.push({ prices, ts }),
-    getHistory: (): PricePoint[] => [],
-    listItems: () => [],
+    recordSnapshot: async (prices, ts) => { snaps.push({ prices, ts }); },
+    getHistory: async (): Promise<PricePoint[]> => [],
+    listItems: async () => [],
   };
   return { store, snaps };
 }

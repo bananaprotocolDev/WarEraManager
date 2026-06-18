@@ -71,6 +71,6 @@ export async function runCalibration(
   }
 
   const factor = totalRealized / totalModeled;
-  store.set({ factor, samples, updatedAt: now });
+  await store.set({ factor, samples, updatedAt: now });
   return { ok: true, factor, samples, rows };
 }

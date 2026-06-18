@@ -10,6 +10,6 @@ export async function GET(req: Request): Promise<Response> {
   const hoursRaw = Number(url.searchParams.get("hours"));
   const hours = hoursRaw > 0 ? hoursRaw : 168;
   const since = Date.now() - hours * 60 * 60 * 1000;
-  const points = getPriceStore().getHistory(item, since);
+  const points = await getPriceStore().getHistory(item, since);
   return Response.json({ item, points });
 }

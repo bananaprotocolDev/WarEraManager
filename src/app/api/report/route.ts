@@ -13,7 +13,7 @@ export async function GET(req: Request): Promise<Response> {
   const client = new WareraClient({ apiKey });
 
   try {
-    const portfolio = await buildPortfolio(client, { userId, authenticated: Boolean(apiKey), rateFactor: getRateFactor(), priceStore: getPriceStore() });
+    const portfolio = await buildPortfolio(client, { userId, authenticated: Boolean(apiKey), rateFactor: await getRateFactor(), priceStore: getPriceStore() });
     return Response.json(portfolio);
   } catch (e) {
     const message = e instanceof Error ? e.message : "unknown error";

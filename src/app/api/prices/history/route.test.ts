@@ -12,7 +12,7 @@ describe("GET /api/prices/history", () => {
   });
 
   it("devuelve los puntos del item", async () => {
-    getHistory.mockReturnValueOnce([{ ts: 1000, price: 1.5 }]);
+    getHistory.mockResolvedValueOnce([{ ts: 1000, price: 1.5 }]);
     const res = await GET(new Request("http://localhost/api/prices/history?item=bread"));
     expect(res.status).toBe(200);
     const body = await res.json();

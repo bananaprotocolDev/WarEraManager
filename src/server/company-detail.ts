@@ -85,7 +85,7 @@ export async function buildCompanyDetail(
     ? await realizedSalesPerDay(client, opts.userId, c.itemCode, 7)
     : null;
 
-  const priceInfo = priceTrendFor(opts.priceStore, c.itemCode, prices);
+  const priceInfo = await priceTrendFor(opts.priceStore, c.itemCode, prices);
 
   // Recalcular el report con sellPerDay si lo conocemos (afecta usefulRate).
   const reportWithSell = assembleCompanyReport({

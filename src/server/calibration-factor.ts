@@ -7,6 +7,6 @@ export function rateFactorFrom(c: Calibration | null): number {
 }
 
 /** Carga el factor de tasa vigente desde el store (server). */
-export function getRateFactor(): number {
-  return rateFactorFrom(getCalibrationStore().get());
+export async function getRateFactor(): Promise<number> {
+  return rateFactorFrom(await getCalibrationStore().get());
 }

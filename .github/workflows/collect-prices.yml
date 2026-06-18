@@ -1,0 +1,20 @@
+name: Collect WarEra prices
+
+# Dispara la recolección de snapshots de precios cada 30 min (gratis en GitHub Actions),
+# pegándole al endpoint protegido de la app desplegada en Vercel.
+# Requiere dos secrets en el repo (Settings → Secrets and variables → Actions):
+#   APP_URL       → la URL pública de Vercel, ej: https://warera-manager.vercel.app
+#   CRON_SECRET   → el mismo valor que la env CRON_SECRET en Vercel
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit collect-prices endpoint
+        run: |
+          curl -fsS -X GET "${{ secrets.APP_URL }}/api/cron/collect-prices" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

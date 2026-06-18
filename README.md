@@ -14,12 +14,18 @@ recomendador de contratación, optimizador de producción, precios y tendencias.
 
 `npm test` · type-check `npx tsc --noEmit` · build `npm run build`
 
-## Despliegue (Vercel)
+## Despliegue (Vercel + GitHub Actions)
 
 1. Creá una base en [Neon](https://neon.tech) y copiá el `DATABASE_URL`.
 2. Subí el repo a GitHub.
 3. En Vercel: New Project → importá el repo → env vars `DATABASE_URL` y `CRON_SECRET` → Deploy.
-4. El cron (`vercel.json`) toma snapshots de precios cada 30 min; las tablas se crean solas.
+   Las tablas de Postgres se crean solas en el primer uso.
+4. **Snapshots de precios (cron):** el cron de Vercel free es 1 vez/día, así que la recolección la
+   dispara un workflow de GitHub Actions (`.github/workflows/collect-prices.yml`) cada 30 min.
+   En el repo de GitHub → Settings → Secrets and variables → Actions, agregá:
+   - `APP_URL` → la URL pública de Vercel (ej. `https://tu-app.vercel.app`)
+   - `CRON_SECRET` → el mismo valor que en Vercel
+   (Podés correrlo a mano desde la pestaña Actions con "Run workflow".)
 
 ## Seguridad
 

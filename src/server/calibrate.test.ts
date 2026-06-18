@@ -14,7 +14,9 @@ const recent = "2026-06-09T00:00:00.000Z"; // dentro de 7 días
 function fakeClient(over: Partial<Record<string, unknown>> = {}) {
   return {
     getUserCompanies: async () => ({ items: ["c1"] }),
-    getCompanyById: async () => ({ _id: "c1", itemCode: "steel", production: 100, workerCount: 0, activeUpgradeLevels: { automatedEngine: 0, breakRoom: 0 } }),
+    getCompanyById: async () => ({ _id: "c1", itemCode: "steel", production: 50, workerCount: 0, activeUpgradeLevels: { automatedEngine: 3, breakRoom: 1, storage: 1 } }),
+    getGameConfig: async () => ({ items: {}, upgradesConfig: { automatedEngine: { levels: { "3": { stats: { dailyProd: 100 } } } } } }),
+    getWorkers: async () => [],
     getUserItemTransactions: async () => ({
       items: [
         { sellerId: "u1", quantity: 350, createdAt: recent },
@@ -27,14 +29,14 @@ function fakeClient(over: Partial<Record<string, unknown>> = {}) {
 }
 
 describe("runCalibration", () => {
-  it("deriva factor = unidades vendidas/día ÷ producción y lo persiste", async () => {
+  it("deriva factor = venta real/día ÷ tasa modelada y lo persiste", async () => {
     const { store, get } = fakeStore();
     const r = await runCalibration(fakeClient(), store, { userId: "u1", days: 7, now: NOW });
-    // vendidas = 350 en 7 días = 50/día ; producción = 100 ; factor = 0.5
+    // realizadas = 350/7 = 50/día ; modelada (automatización L3) = 100 ; factor = 0.5
     expect(r.ok).toBe(true);
     if (!r.ok) throw new Error("expected ok");
     expect(r.factor).toBeCloseTo(0.5);
-    expect(r.rows[0]).toMatchObject({ itemCode: "steel", productionPerDay: 100, realizedPerDay: 50 });
+    expect(r.rows[0]).toMatchObject({ itemCode: "steel", modeledPerDay: 100, realizedPerDay: 50 });
     expect(get()?.factor).toBeCloseTo(0.5);
   });
 
@@ -53,7 +55,7 @@ describe("runCalibration", () => {
     let txCalls = 0;
     const client = fakeClient({
       getUserCompanies: async () => ({ items: ["c1", "c2"] }), // dos empresas de steel
-      getCompanyById: async () => ({ _id: "c", itemCode: "steel", production: 100, workerCount: 0, activeUpgradeLevels: { automatedEngine: 0, breakRoom: 0 } }),
+      getCompanyById: async () => ({ _id: "c", itemCode: "steel", production: 50, workerCount: 0, activeUpgradeLevels: { automatedEngine: 3, breakRoom: 1, storage: 1 } }),
       getUserItemTransactions: async () => {
         txCalls++;
         return { items: [{ sellerId: "u1", quantity: 350, createdAt: recent }], nextCursor: null };
@@ -62,11 +64,11 @@ describe("runCalibration", () => {
     const r = await runCalibration(client, store, { userId: "u1", days: 7, now: NOW });
     expect(r.ok).toBe(true);
     if (!r.ok) throw new Error("expected ok");
-    // Las ventas (350/7=50/día) se cuentan UNA vez; producción agregada = 200 → factor 0.25.
+    // Las ventas (350/7=50/día) se cuentan UNA vez; tasa modelada agregada = 2×100=200 → factor 0.25.
     expect(txCalls).toBe(1);
     expect(r.factor).toBeCloseTo(0.25);
     expect(r.rows).toHaveLength(1);
-    expect(r.rows[0]).toMatchObject({ itemCode: "steel", productionPerDay: 200, realizedPerDay: 50 });
+    expect(r.rows[0]).toMatchObject({ itemCode: "steel", modeledPerDay: 200, realizedPerDay: 50 });
   });
 
   it("ignora transacciones fuera de la ventana", async () => {

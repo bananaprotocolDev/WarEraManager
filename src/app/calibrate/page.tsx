@@ -110,7 +110,7 @@ export default function CalibratePage() {
                       {result.rows.map((r) => (
                         <tr key={r.itemCode} className="border-b border-border last:border-0">
                           <td className="px-4 py-2.5 font-mono">{r.itemCode}</td>
-                          <td className="tabular px-4 py-2.5 text-right">{formatMoney(r.productionPerDay)}</td>
+                          <td className="tabular px-4 py-2.5 text-right">{formatMoney(r.modeledPerDay)}</td>
                           <td className="tabular px-4 py-2.5 text-right">{formatMoney(r.realizedPerDay)}</td>
                         </tr>
                       ))}

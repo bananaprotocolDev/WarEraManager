@@ -118,12 +118,21 @@ Salida: `{ viable, motivo, maxWagePerPoint, freeSlots, recommendedProfile, sugge
   `production/workerCount`— queda obsoleto). Tests asociados se actualizan.
 - `buildPortfolio` / `buildCompanyDetail` pasan a leer `gameConfig` (ya lo hacen para recetas) y los
   niveles de upgrades, y la venta/día (cuando hay token).
-- **Calibración (Plan 6A):** el factor `production→unidades` deja de tener sentido (production = stock).
-  Se ajusta: la calibración se reorienta a validar el modelo laboral, o se marca como deprecada y la
-  UI deja de ofrecerla hasta el Plan 7. Decisión a tomar en el plan: lo más limpio es **reemplazar** el
-  uso del factor por el modelo determinístico (automatización desde gameConfig) y dejar la página de
-  calibración para validar el throughput laboral. (Se documenta en el plan; no se rompe nada existente
-  sin reemplazo.)
+- **Calibración (Plan 6A): se PARCHEA, no se rompe ni se elimina.** El factor `production→unidades`
+  pierde sentido (production = stock; la automatización ya es determinística desde `gameConfig`). En
+  vez de borrarla, la calibración se **reorienta a calibrar el throughput laboral** (la única
+  incertidumbre que queda):
+  - Por empresa: `ventaPorDía` (de transacciones) vs `automationDailyProd` (exacto). Para empresas
+    **sin trabajadores**, `ventaPorDía ≈ automationDailyProd` → valida el modelo de automatización
+    (sanity check, no necesita factor).
+  - Para empresas **con trabajadores**: `aporteRealTrabajadores/día = ventaPorDía − automationDailyProd`;
+    se compara con el aporte modelado (§5) para derivar un **factor laboral** (`LABOR_CONSTANTS`).
+  - Se **reusan** el `CalibrationStore`, el endpoint `/api/calibrate` y la página `/calibrate`; cambia
+    lo que `runCalibration` calcula (factor laboral en vez de production→unidades) y los textos de la UI.
+  - El factor laboral persistido alimenta el modelo laboral del recomendador (§5). Si no hay empresas
+    con trabajadores/ventas suficientes, no se persiste (igual que hoy) y se informa.
+  Este parche vive en el **Plan 7B** (junto al modelo laboral). El Plan 7A no toca la calibración (la
+  deja como está, inofensiva); 7B la reorienta.
 - El flag `estimated` pasa a reflejar: automatización (determinística, exacta) vs throughput laboral y
   venta/día (estimados si no hay token).
 
@@ -153,9 +162,10 @@ Salida: `{ viable, motivo, maxWagePerPoint, freeSlots, recommendedProfile, sugge
 - **Plan 7A — Modelo de producción corregido:** helpers de gameConfig, reescritura de `companyProfit`
   con tasa diaria + almacén + venta/día, wiring en reportes, ajuste de calibración, UI de stock/almacén
   y beneficio corregido. Entregable: beneficio/día correcto.
-- **Plan 7B — Recomendador de contratación:** modelo laboral, `hiringRecommendation`, lectura del
-  mercado laboral, endpoint/datos y panel "Contratación" en el detalle. Entregable: recomendación
-  completa de a quién contratar y cuánto pagar.
+- **Plan 7B — Recomendador de contratación (+ parche de calibración):** modelo laboral,
+  `hiringRecommendation`, lectura del mercado laboral, endpoint/datos y panel "Contratación" en el
+  detalle, MÁS el parche de la calibración (§7: reorientarla a calibrar el throughput laboral, reusando
+  store/endpoint/página). Entregable: recomendación completa + calibración coherente con el nuevo modelo.
 
 ## 11. Riesgos y mitigaciones
 

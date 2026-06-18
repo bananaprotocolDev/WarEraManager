@@ -44,18 +44,13 @@ async function main() {
       workersUnavailable = true;
     }
     const item = itemDef(c.itemCode);
+    const wageCostPerDay = workers.reduce((sum, w) => sum + w.wage, 0);
     const p = companyProfit({
-      company: {
-        id: c._id,
-        itemCode: c.itemCode,
-        production: c.production,
-        workerCount: c.workerCount,
-        upgrades: c.activeUpgradeLevels,
-      },
+      dailyProductionRate: 0, // placeholder — use buildPortfolio for real rate
       item,
-      workers,
       prices,
       taxes,
+      wageCostPerDay,
     });
     total += p.netProfit;
     console.log(

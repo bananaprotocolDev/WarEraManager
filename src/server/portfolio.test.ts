@@ -8,16 +8,14 @@ function fakeClient(overrides: Partial<Record<string, unknown>> = {}) {
     getCountryById: async () => ({ taxes: { income: 0, market: 10, selfWork: 0 } }),
     getUserCompanies: async () => ({ items: ["c1"] }),
     getCompanyById: async () => ({
-      _id: "c1",
-      itemCode: "bread",
-      production: 10,
-      workerCount: 2,
-      activeUpgradeLevels: { automatedEngine: 0, breakRoom: 0 },
+      _id: "c1", itemCode: "bread", production: 50, workerCount: 2,
+      activeUpgradeLevels: { automatedEngine: 3, breakRoom: 1, storage: 1 },
     }),
     getWorkers: async () => [{ wage: 1 }, { wage: 2 }],
     getPrices: async () => ({ bread: 1.5, grain: 0.1 }),
     getGameConfig: async () => ({
       items: { bread: { type: "product", productionPoints: 1, productionNeeds: { grain: 2 } } },
+      upgradesConfig: { automatedEngine: { levels: { "3": { stats: { dailyProd: 72 } } } }, storage: { levels: { "1": { stats: { maxProduction: 200 } } } } },
     }),
     ...overrides,
   } as never;
@@ -29,12 +27,15 @@ describe("buildPortfolio", () => {
     expect(r.companies).toHaveLength(1);
     const c = r.companies[0];
     expect(c.itemCode).toBe("bread");
-    // neto = 15 - 2 - 3 - 1.5 = 8.5
-    expect(c.profit.netProfit).toBeCloseTo(8.5);
-    expect(c.maxWageToHire).toBeCloseTo(c.hiring.maxWage);
-    expect(r.totalNetProfit).toBeCloseTo(8.5);
+    // tasa 72 ; ingresos 108 ; inputs 14.4 ; salarios 3 ; impuesto 10.8 ; neto 79.8
+    expect(c.dailyProductionRate).toBe(72);
+    expect(c.profit.netProfit).toBeCloseTo(79.8);
+    expect(c.stock).toBe(50);
+    expect(c.storageMax).toBe(200);
+    expect(c.maxWageToHire).toBeCloseTo(c.marginPerUnit * 0.9);
+    expect(r.totalNetProfit).toBeCloseTo(79.8);
     expect(r.wagesAvailable).toBe(true);
-    expect(r.estimated).toBe(true); // game-constants sin calibrar
+    expect(r.estimated).toBe(true);
   });
 
   it("sin autenticación no intenta leer salarios (wageCost=0, wagesAvailable=false)", async () => {

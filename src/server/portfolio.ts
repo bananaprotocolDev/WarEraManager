@@ -1,7 +1,6 @@
 import type { WareraClient } from "@/lib/warera/client";
 import { toItemDef } from "@/lib/economy";
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
-import { GAME_CONSTANTS, type GameConstants } from "@/lib/game-constants";
 
 export type { CompanyReport };
 
@@ -19,7 +18,6 @@ export interface BuildPortfolioOptions {
   userId: string;
   /** Si el request traía API token (afecta el flag wagesAvailable por defecto). */
   authenticated: boolean;
-  constants?: GameConstants;
 }
 
 /**
@@ -70,10 +68,9 @@ export async function buildPortfolio(
       itemCode: c.itemCode,
       production: c.production,
       workerCount: c.workerCount,
-      upgrades: c.activeUpgradeLevels,
+      upgrades: c.activeUpgradeLevels, // { automatedEngine, breakRoom, storage }
     };
-
-    const report = assembleCompanyReport({ company, item, workers, prices, taxes, constants: opts.constants ?? GAME_CONSTANTS });
+    const report = assembleCompanyReport({ company, item, workers, prices, taxes, upgradesConfig: gameConfig.upgradesConfig });
     companies.push(report);
   }
 

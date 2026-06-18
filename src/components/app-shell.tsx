@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { LineChart, KeyRound, Boxes } from "lucide-react";
+import { LineChart, KeyRound, Boxes, SlidersHorizontal } from "lucide-react";
 
 export function AppShell({ children, hasToken }: { children: React.ReactNode; hasToken?: boolean }) {
   return (
@@ -29,6 +29,14 @@ export function AppShell({ children, hasToken }: { children: React.ReactNode; ha
             >
               <LineChart className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Mercado</span>
+            </Link>
+            <Link
+              href="/calibrate"
+              aria-label="Calibrar"
+              className="flex items-center gap-1.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Calibrar</span>
             </Link>
             <Link
               href="/onboarding"

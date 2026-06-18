@@ -33,7 +33,7 @@ describe("GET /api/report", () => {
     const mock = buildPortfolio as unknown as ReturnType<typeof vi.fn>;
     mock.mockResolvedValueOnce({ userId: "u1", companies: [], totalNetProfit: 0, wagesAvailable: true, estimated: true });
     await GET(new Request("http://localhost/api/report?userId=u1", { headers: { "X-API-Key": "tok" } }));
-    expect(mock).toHaveBeenCalledWith(expect.anything(), { userId: "u1", authenticated: true });
+    expect(mock).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ userId: "u1", authenticated: true }));
   });
 
   it("502 si el servicio falla", async () => {

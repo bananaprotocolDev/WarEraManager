@@ -1,5 +1,6 @@
 import { companyProfit, hiringAnalysis } from "@/lib/economy";
 import type { ItemDef, CompanyData, WorkerData, Taxes, PriceMap, ProfitBreakdown, HiringResult } from "@/lib/economy";
+import { GAME_CONSTANTS, type GameConstants } from "@/lib/game-constants";
 
 export interface CompanyReport {
   id: string;
@@ -17,20 +18,10 @@ export function assembleCompanyReport(args: {
   workers: WorkerData[];
   prices: PriceMap;
   taxes: Taxes;
+  constants?: GameConstants;
 }): CompanyReport {
-  const profit = companyProfit({
-    company: args.company,
-    item: args.item,
-    workers: args.workers,
-    prices: args.prices,
-    taxes: args.taxes,
-  });
-  const hiring = hiringAnalysis({
-    company: args.company,
-    item: args.item,
-    prices: args.prices,
-    taxes: args.taxes,
-    candidateWage: 0,
-  });
+  const constants = args.constants ?? GAME_CONSTANTS;
+  const profit = companyProfit({ company: args.company, item: args.item, workers: args.workers, prices: args.prices, taxes: args.taxes, constants });
+  const hiring = hiringAnalysis({ company: args.company, item: args.item, prices: args.prices, taxes: args.taxes, candidateWage: 0, constants });
   return { id: args.company.id, itemCode: args.company.itemCode, profit, hiring, maxWageToHire: hiring.maxWage };
 }

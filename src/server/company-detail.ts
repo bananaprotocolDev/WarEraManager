@@ -1,6 +1,7 @@
 import type { WareraClient } from "@/lib/warera/client";
 import { toItemDef } from "@/lib/economy";
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
+import { GAME_CONSTANTS, type GameConstants } from "@/lib/game-constants";
 
 export interface RecipeEntry {
   input: string;
@@ -22,6 +23,7 @@ export interface BuildCompanyDetailOptions {
   companyId: string;
   userId: string;
   authenticated: boolean;
+  constants?: GameConstants;
 }
 
 /** Detalle completo de una empresa: desglose, trabajadores, upgrades y receta. */
@@ -61,7 +63,7 @@ export async function buildCompanyDetail(
     upgrades: c.activeUpgradeLevels,
   };
 
-  const report = assembleCompanyReport({ company, item, workers, prices, taxes });
+  const report = assembleCompanyReport({ company, item, workers, prices, taxes, constants: opts.constants ?? GAME_CONSTANTS });
   const recipe: RecipeEntry[] = Object.entries(item.productionNeeds).map(([input, qtyPerUnit]) => ({
     input,
     qtyPerUnit,

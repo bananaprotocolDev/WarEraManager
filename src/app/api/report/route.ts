@@ -1,5 +1,6 @@
 import { WareraClient } from "@/lib/warera/client";
 import { buildPortfolio } from "@/server/portfolio";
+import { getGameConstants } from "@/server/get-constants";
 
 export async function GET(req: Request): Promise<Response> {
   const userId = new URL(req.url).searchParams.get("userId");
@@ -11,7 +12,7 @@ export async function GET(req: Request): Promise<Response> {
   const client = new WareraClient({ apiKey });
 
   try {
-    const portfolio = await buildPortfolio(client, { userId, authenticated: Boolean(apiKey) });
+    const portfolio = await buildPortfolio(client, { userId, authenticated: Boolean(apiKey), constants: getGameConstants() });
     return Response.json(portfolio);
   } catch (e) {
     const message = e instanceof Error ? e.message : "unknown error";

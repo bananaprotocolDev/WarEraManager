@@ -10,6 +10,8 @@ import {
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
 import { realizedSalesPerDay } from "./sell-rate";
 import { companyWorkerOutput, type WorkerLite } from "./worker-output";
+import { priceTrendFor } from "./price-trend-for";
+import type { PriceHistoryStore } from "@/lib/db/price-store";
 
 export interface RecipeEntry {
   input: string;
@@ -35,6 +37,7 @@ export interface BuildCompanyDetailOptions {
   authenticated: boolean;
   /** Factor de corrección de tasa (calibración). Las rutas lo inyectan; default 1. */
   rateFactor?: number;
+  priceStore?: PriceHistoryStore;
 }
 
 /** Detalle completo de una empresa: desglose, trabajadores, upgrades y receta. */
@@ -82,6 +85,8 @@ export async function buildCompanyDetail(
     ? await realizedSalesPerDay(client, opts.userId, c.itemCode, 7)
     : null;
 
+  const priceInfo = priceTrendFor(opts.priceStore, c.itemCode, prices);
+
   // Recalcular el report con sellPerDay si lo conocemos (afecta usefulRate).
   const reportWithSell = assembleCompanyReport({
     company, item, workers, prices, taxes,
@@ -89,6 +94,7 @@ export async function buildCompanyDetail(
     sellPerDay: sellPerDay ?? undefined,
     workerDailyOutput,
     rateFactor: opts.rateFactor,
+    priceInfo,
   });
 
   const offers = await client.getWorkOffers({ limit: 20 }).then((r) => r.items).catch(() => []);

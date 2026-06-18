@@ -1,6 +1,7 @@
 import { WareraClient } from "@/lib/warera/client";
 import { buildPortfolio } from "@/server/portfolio";
 import { getRateFactor } from "@/server/calibration-factor";
+import { getPriceStore } from "@/lib/db/get-price-store";
 
 export async function GET(req: Request): Promise<Response> {
   const userId = new URL(req.url).searchParams.get("userId");
@@ -12,7 +13,7 @@ export async function GET(req: Request): Promise<Response> {
   const client = new WareraClient({ apiKey });
 
   try {
-    const portfolio = await buildPortfolio(client, { userId, authenticated: Boolean(apiKey), rateFactor: getRateFactor() });
+    const portfolio = await buildPortfolio(client, { userId, authenticated: Boolean(apiKey), rateFactor: getRateFactor(), priceStore: getPriceStore() });
     return Response.json(portfolio);
   } catch (e) {
     const message = e instanceof Error ? e.message : "unknown error";

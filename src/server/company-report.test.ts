@@ -41,4 +41,12 @@ describe("assembleCompanyReport", () => {
     // (72 automatización + 28 trabajadores) × 0.5 = 50
     expect(r.dailyProductionRate).toBe(50);
   });
+
+  it("incluye la tendencia de precio cuando se provee", () => {
+    const r = assembleCompanyReport({
+      company, item: bread, workers: [], prices, taxes, upgradesConfig,
+      priceInfo: { current: 1.6, avg: 1.4, trend: "up" },
+    });
+    expect(r.price).toEqual({ current: 1.6, avg: 1.4, trend: "up" });
+  });
 });

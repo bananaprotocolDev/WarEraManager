@@ -49,8 +49,8 @@ export default function CalibratePage() {
         <SlidersHorizontal className="h-5 w-5" aria-hidden="true" /> Calibración
       </h1>
       <p className="mb-4 text-sm text-muted-foreground">
-        Compara lo que tus empresas producen contra lo que realmente vendiste (últimos 7 días) para
-        ajustar las cifras. Los precios no afectan este cálculo (se mide por unidades).
+        Compara lo que tus empresas <strong>producen</strong> (automatización + trabajadores) contra lo que{" "}
+        <strong>vendés</strong> (últimos 7 días) y ajusta la tasa con un factor.
       </p>
 
       {!token ? (
@@ -81,10 +81,11 @@ export default function CalibratePage() {
             <div className="mt-6 flex flex-col gap-4">
               {result.ok ? (
                 <Card className="cursor-default border-success/40">
-                  <p className="font-medium text-success">Calibrado ✓</p>
-                  <p className="tabular mt-1 text-2xl font-bold">factor {result.factor.toFixed(3)}</p>
+                  <p className="font-medium text-success">
+                    Calibrado ✓ — factor {result.factor.toFixed(3)}. Las tasas se ajustan ×{result.factor.toFixed(3)}.
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    Basado en {result.samples} empresa(s) con ventas. Las cifras ya no son estimadas.
+                    Basado en {result.samples} empresa(s) con ventas.
                   </p>
                 </Card>
               ) : (
@@ -102,7 +103,7 @@ export default function CalibratePage() {
                     <thead>
                       <tr className="border-b border-border text-left text-muted-foreground">
                         <th className="px-4 py-3 font-medium">Item</th>
-                        <th className="px-4 py-3 text-right font-medium">Producción/día</th>
+                        <th className="px-4 py-3 text-right font-medium">Modelado/día</th>
                         <th className="px-4 py-3 text-right font-medium">Vendido/día</th>
                       </tr>
                     </thead>

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema, transactionsPageSchema } from "./schemas";
+import { gameConfigSchema as gcSchema2, companySchema as cSchema2 } from "./schemas";
 
 describe("warera schemas", () => {
   it("desenvuelve la forma tRPC { result: { data } }", () => {
@@ -65,6 +66,37 @@ describe("userLiteSchema", () => {
   it("acepta country ausente", () => {
     const u = userLiteSchema.parse({ _id: "u2", username: "x" });
     expect(u.country).toBeUndefined();
+  });
+});
+
+describe("upgradesConfig + storage", () => {
+  it("parsea upgradesConfig con niveles y stats", () => {
+    const gc = gcSchema2.parse({
+      items: {},
+      upgradesConfig: {
+        automatedEngine: { levels: { "1": { stats: { dailyProd: 24 } }, "3": { stats: { dailyProd: 72 } } } },
+        storage: { levels: { "1": { stats: { maxProduction: 200 } } } },
+        breakRoom: { levels: { "2": { stats: { maxWorkers: 4, dailyHires: 4 } } } },
+      },
+    });
+    expect(gc.upgradesConfig.automatedEngine?.levels["3"].stats.dailyProd).toBe(72);
+    expect(gc.upgradesConfig.storage?.levels["1"].stats.maxProduction).toBe(200);
+  });
+
+  it("company incluye storage en activeUpgradeLevels (default 0)", () => {
+    const c = cSchema2.parse({
+      _id: "c1",
+      itemCode: "steel",
+      production: 191,
+      workerCount: 0,
+      activeUpgradeLevels: { automatedEngine: 3, breakRoom: 1 },
+    });
+    expect(c.activeUpgradeLevels.storage).toBe(0);
+    const c2 = cSchema2.parse({
+      _id: "c2", itemCode: "oil", production: 8, workerCount: 1,
+      activeUpgradeLevels: { automatedEngine: 5, breakRoom: 1, storage: 2 },
+    });
+    expect(c2.activeUpgradeLevels.storage).toBe(2);
   });
 });
 

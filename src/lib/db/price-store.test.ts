@@ -1,36 +1,35 @@
 import { describe, it, expect } from "vitest";
-import { SqlitePriceStore } from "./price-store";
+import { PostgresPriceHistoryStore } from "./price-store";
 
-function store() {
-  return new SqlitePriceStore(":memory:");
+/** Fake del ejecutor SQL: registra cada query (template unido por '?') y devuelve filas predefinidas. */
+function fakeSql(resultFor: (q: string) => Record<string, unknown>[] = () => []) {
+  const queries: string[] = [];
+  const sql = async (strings: TemplateStringsArray) => {
+    const q = strings.join("?");
+    queries.push(q);
+    return resultFor(q);
+  };
+  return { sql: sql as never, queries };
 }
 
-describe("SqlitePriceStore", () => {
-  it("guarda un snapshot y devuelve el histórico de un item", () => {
-    const s = store();
-    s.recordSnapshot({ bread: 1.5, grain: 0.1 }, 1000);
-    s.recordSnapshot({ bread: 1.6, grain: 0.1 }, 2000);
-    const h = s.getHistory("bread", 0);
-    expect(h).toEqual([
-      { ts: 1000, price: 1.5 },
-      { ts: 2000, price: 1.6 },
-    ]);
+describe("PostgresPriceHistoryStore", () => {
+  it("getHistory mapea filas a {ts, price} numéricos", async () => {
+    const { sql } = fakeSql((q) => (q.includes("SELECT ts") ? [{ ts: "1000", price: "1.5" }] : []));
+    const store = new PostgresPriceHistoryStore(sql);
+    const h = await store.getHistory("steel", 0);
+    expect(h).toEqual([{ ts: 1000, price: 1.5 }]);
   });
 
-  it("filtra por `since`", () => {
-    const s = store();
-    s.recordSnapshot({ bread: 1.5 }, 1000);
-    s.recordSnapshot({ bread: 1.6 }, 2000);
-    expect(s.getHistory("bread", 1500)).toEqual([{ ts: 2000, price: 1.6 }]);
+  it("recordSnapshot emite un INSERT", async () => {
+    const { sql, queries } = fakeSql();
+    const store = new PostgresPriceHistoryStore(sql);
+    await store.recordSnapshot({ steel: 1.5, iron: 0.1 }, 2000);
+    expect(queries.some((q) => /INSERT INTO price_snapshots/i.test(q))).toBe(true);
   });
 
-  it("devuelve [] para un item sin datos", () => {
-    expect(store().getHistory("nada", 0)).toEqual([]);
-  });
-
-  it("lista los items con histórico", () => {
-    const s = store();
-    s.recordSnapshot({ bread: 1.5, grain: 0.1 }, 1000);
-    expect(s.listItems().sort()).toEqual(["bread", "grain"]);
+  it("listItems devuelve los items distintos", async () => {
+    const { sql } = fakeSql((q) => (q.includes("DISTINCT") ? [{ item: "steel" }, { item: "iron" }] : []));
+    const store = new PostgresPriceHistoryStore(sql);
+    expect((await store.listItems()).sort()).toEqual(["iron", "steel"]);
   });
 });

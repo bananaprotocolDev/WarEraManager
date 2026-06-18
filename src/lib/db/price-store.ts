@@ -1,53 +1,56 @@
-import Database from "better-sqlite3";
+/** Ejecutor de queries estilo tagged-template (compatible con `neon()`). */
+export type SqlExec = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<Record<string, unknown>[]>;
 
 export interface PricePoint {
   ts: number;
   price: number;
 }
 
-/** Almacén de histórico de precios (público/global). Implementable en SQLite o Postgres. */
+/** Almacén de histórico de precios (público/global). Async. */
 export interface PriceHistoryStore {
-  /** Registra un snapshot completo de precios con un timestamp (ms). */
-  recordSnapshot(prices: Record<string, number>, ts?: number): void;
-  /** Serie temporal de un item desde `since` (ms, inclusive), ascendente por ts. */
-  getHistory(item: string, since: number): PricePoint[];
-  /** Items que tienen algún dato. */
-  listItems(): string[];
+  recordSnapshot(prices: Record<string, number>, ts?: number): Promise<void>;
+  getHistory(item: string, since: number): Promise<PricePoint[]>;
+  listItems(): Promise<string[]>;
 }
 
-export class SqlitePriceStore implements PriceHistoryStore {
-  private db: Database.Database;
+export class PostgresPriceHistoryStore implements PriceHistoryStore {
+  private schemaReady?: Promise<void>;
 
-  constructor(path = "data/prices.db") {
-    this.db = new Database(path);
-    this.db.pragma("journal_mode = WAL");
-    this.db.exec(
-      `CREATE TABLE IF NOT EXISTS price_snapshots (
-        item TEXT NOT NULL,
-        price REAL NOT NULL,
-        ts INTEGER NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_item_ts ON price_snapshots (item, ts);`,
-    );
+  constructor(private sql: SqlExec) {}
+
+  private ensureSchema(): Promise<void> {
+    return (this.schemaReady ??= this.sql`
+      CREATE TABLE IF NOT EXISTS price_snapshots (
+        item text NOT NULL,
+        price double precision NOT NULL,
+        ts bigint NOT NULL
+      )
+    `.then(() => this.sql`CREATE INDEX IF NOT EXISTS idx_price_item_ts ON price_snapshots (item, ts)`).then(() => {}));
   }
 
-  recordSnapshot(prices: Record<string, number>, ts: number = Date.now()): void {
-    const insert = this.db.prepare("INSERT INTO price_snapshots (item, price, ts) VALUES (?, ?, ?)");
-    const tx = this.db.transaction((entries: [string, number][]) => {
-      for (const [item, price] of entries) insert.run(item, price, ts);
-    });
-    tx(Object.entries(prices));
+  async recordSnapshot(prices: Record<string, number>, ts: number = Date.now()): Promise<void> {
+    await this.ensureSchema();
+    const items = Object.keys(prices);
+    if (items.length === 0) return;
+    const priceArr = items.map((i) => prices[i]);
+    const tsArr = items.map(() => ts);
+    await this.sql`
+      INSERT INTO price_snapshots (item, price, ts)
+      SELECT * FROM unnest(${items}::text[], ${priceArr}::float8[], ${tsArr}::bigint[])
+    `;
   }
 
-  getHistory(item: string, since: number): PricePoint[] {
-    return this.db
-      .prepare("SELECT ts, price FROM price_snapshots WHERE item = ? AND ts >= ? ORDER BY ts ASC")
-      .all(item, since) as PricePoint[];
+  async getHistory(item: string, since: number): Promise<PricePoint[]> {
+    await this.ensureSchema();
+    const rows = await this.sql`
+      SELECT ts, price FROM price_snapshots WHERE item = ${item} AND ts >= ${since} ORDER BY ts ASC
+    `;
+    return rows.map((r) => ({ ts: Number(r.ts), price: Number(r.price) }));
   }
 
-  listItems(): string[] {
-    return (this.db.prepare("SELECT DISTINCT item FROM price_snapshots").all() as { item: string }[]).map(
-      (r) => r.item,
-    );
+  async listItems(): Promise<string[]> {
+    await this.ensureSchema();
+    const rows = await this.sql`SELECT DISTINCT item FROM price_snapshots`;
+    return rows.map((r) => String(r.item));
   }
 }

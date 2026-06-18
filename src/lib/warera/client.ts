@@ -8,6 +8,7 @@ import {
   countrySchema,
   gameConfigSchema,
   userLiteSchema,
+  transactionsPageSchema,
 } from "./schemas";
 
 const DEFAULT_BASE = "https://api2.warera.io/trpc";
@@ -78,5 +79,14 @@ export class WareraClient {
 
   getUserLite(userId: string) {
     return this.call("user.getUserLite", userLiteSchema, { userId });
+  }
+
+  getUserItemTransactions(userId: string, itemCode: string, cursor?: string) {
+    return this.call("transaction.getPaginatedTransactions", transactionsPageSchema, {
+      userId,
+      itemCode,
+      limit: 100,
+      ...(cursor ? { cursor } : {}),
+    });
   }
 }

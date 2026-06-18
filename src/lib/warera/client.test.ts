@@ -83,4 +83,16 @@ describe("WareraClient", () => {
     expect(calledUrl).toContain("user.getUserLite");
     expect(calledUrl).toContain(encodeURIComponent(JSON.stringify({ userId: "u1" })));
   });
+
+  it("getUserItemTransactions envía userId+itemCode y parsea", async () => {
+    const spy = mockFetchOnce({ items: [{ sellerId: "u1", money: 10, quantity: 5, createdAt: "2026-06-17T00:00:00.000Z" }], nextCursor: null });
+    const client = new WareraClient({ apiKey: "tok" });
+    const r = await client.getUserItemTransactions("u1", "steel");
+    expect(r.items[0].quantity).toBe(5);
+    const url = spy.mock.calls[0][0] as string;
+    expect(url).toContain("transaction.getPaginatedTransactions");
+    expect(url).toContain(encodeURIComponent(JSON.stringify({ userId: "u1", itemCode: "steel", limit: 100 })));
+    const opts = spy.mock.calls[0][1] as RequestInit;
+    expect((opts.headers as Record<string, string>)["X-API-Key"]).toBe("tok");
+  });
 });

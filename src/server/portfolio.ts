@@ -18,6 +18,8 @@ export interface BuildPortfolioOptions {
   userId: string;
   /** Si el request traía API token (afecta el flag wagesAvailable por defecto). */
   authenticated: boolean;
+  /** Factor de corrección de tasa (calibración). Las rutas lo inyectan; default 1. */
+  rateFactor?: number;
 }
 
 /**
@@ -70,7 +72,7 @@ export async function buildPortfolio(
       workerCount: c.workerCount,
       upgrades: c.activeUpgradeLevels, // { automatedEngine, breakRoom, storage }
     };
-    const report = assembleCompanyReport({ company, item, workers, prices, taxes, upgradesConfig: gameConfig.upgradesConfig });
+    const report = assembleCompanyReport({ company, item, workers, prices, taxes, upgradesConfig: gameConfig.upgradesConfig, rateFactor: opts.rateFactor });
     companies.push(report);
   }
 

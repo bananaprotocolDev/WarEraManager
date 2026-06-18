@@ -3,7 +3,10 @@ import { buildCompanyDetail } from "./company-detail";
 
 function fakeClient(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    getUserLite: async () => ({ _id: "u1", username: "me", country: "co1" }),
+    getUserLite: async (id: string) => ({
+      _id: id, username: id, country: id === "u1" ? "co1" : undefined,
+      skills: { production: { value: 0 }, energy: { value: 0 } },
+    }),
     getCountryById: async () => ({ taxes: { income: 0, market: 10, selfWork: 0 } }),
     getCompanyById: async () => ({
       _id: "c1", itemCode: "bread", production: 10, workerCount: 2,

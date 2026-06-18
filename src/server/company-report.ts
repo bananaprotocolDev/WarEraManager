@@ -35,8 +35,13 @@ export function assembleCompanyReport(args: {
   upgradesConfig: UpgradesConfig;
   /** Venta real/día (7B). Si falta, se asume vender todo lo producido. */
   sellPerDay?: number;
+  /** Aporte de trabajadores en unidades/día (7C). Default 0. */
+  workerDailyOutput?: number;
+  /** Factor de corrección de tasa (calibración). Default 1. */
+  rateFactor?: number;
 }): CompanyReport {
-  const dailyProductionRate = automationDailyProd(args.upgradesConfig, args.company.upgrades.automatedEngine);
+  const automation = automationDailyProd(args.upgradesConfig, args.company.upgrades.automatedEngine);
+  const dailyProductionRate = (automation + (args.workerDailyOutput ?? 0)) * (args.rateFactor ?? 1);
   const wageCostPerDay = args.workers.reduce((sum, w) => sum + w.wage, 0);
 
   const profit = companyProfit({

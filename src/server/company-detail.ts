@@ -9,6 +9,7 @@ import {
 } from "@/lib/economy";
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
 import { realizedSalesPerDay } from "./sell-rate";
+import { companyWorkerOutput, type WorkerLite } from "./worker-output";
 
 export interface RecipeEntry {
   input: string;
@@ -19,7 +20,7 @@ export interface CompanyDetail {
   id: string;
   itemCode: string;
   report: CompanyReport;
-  workers: { wage: number }[];
+  workers: WorkerLite[];
   wagesAvailable: boolean;
   upgrades: { automatedEngine: number; breakRoom: number; storage: number };
   recipe: RecipeEntry[];
@@ -32,6 +33,8 @@ export interface BuildCompanyDetailOptions {
   companyId: string;
   userId: string;
   authenticated: boolean;
+  /** Factor de corrección de tasa (calibración). Las rutas lo inyectan; default 1. */
+  rateFactor?: number;
 }
 
 /** Detalle completo de una empresa: desglose, trabajadores, upgrades y receta. */
@@ -50,7 +53,7 @@ export async function buildCompanyDetail(
     ? (await client.getCountryById(user.country)).taxes
     : { income: 0, market: 0, selfWork: 0 };
 
-  let workers: { wage: number }[] = [];
+  let workers: WorkerLite[] = [];
   let wagesAvailable = opts.authenticated;
   if (opts.authenticated) {
     try {
@@ -59,6 +62,10 @@ export async function buildCompanyDetail(
       wagesAvailable = false;
     }
   }
+
+  const workerDailyOutput = opts.authenticated
+    ? await companyWorkerOutput(client, workers, LABOR_CONSTANTS)
+    : 0;
 
   const rawItem = gameConfig.items[c.itemCode] ?? { type: "product", productionPoints: 1, productionNeeds: {} };
   const item = toItemDef(c.itemCode, rawItem);
@@ -80,6 +87,8 @@ export async function buildCompanyDetail(
     company, item, workers, prices, taxes,
     upgradesConfig: gameConfig.upgradesConfig,
     sellPerDay: sellPerDay ?? undefined,
+    workerDailyOutput,
+    rateFactor: opts.rateFactor,
   });
 
   const offers = await client.getWorkOffers({ limit: 20 }).then((r) => r.items).catch(() => []);

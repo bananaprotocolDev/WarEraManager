@@ -32,4 +32,13 @@ describe("assembleCompanyReport", () => {
     const r = assembleCompanyReport({ company, item: bread, workers: [{ wage: 2 }, { wage: 3 }], prices, taxes, upgradesConfig });
     expect(r.profit.wageCost).toBe(5);
   });
+
+  it("suma el aporte de trabajadores y aplica el factor de tasa", () => {
+    const r = assembleCompanyReport({
+      company, item: bread, workers: [], prices, taxes, upgradesConfig,
+      workerDailyOutput: 28, rateFactor: 0.5,
+    });
+    // (72 automatización + 28 trabajadores) × 0.5 = 50
+    expect(r.dailyProductionRate).toBe(50);
+  });
 });

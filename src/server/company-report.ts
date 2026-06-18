@@ -1,6 +1,7 @@
 import { companyProfit, maxWagePerPoint, automationDailyProd, storageMax } from "@/lib/economy";
 import type { ItemDef, WorkerData, Taxes, PriceMap, ProfitBreakdown } from "@/lib/economy";
 import type { UpgradesConfig } from "@/lib/economy";
+import type { PriceTrendInfo } from "@/lib/economy";
 
 export interface ReportCompany {
   id: string;
@@ -23,6 +24,7 @@ export interface CompanyReport {
   storageMax: number;
   /** Tasa de producción diaria (automatización en 7A; + trabajadores en 7B). */
   dailyProductionRate: number;
+  price?: PriceTrendInfo;
 }
 
 /** Reporte económico de UNA empresa con el modelo de tasa diaria (puro). */
@@ -39,6 +41,7 @@ export function assembleCompanyReport(args: {
   workerDailyOutput?: number;
   /** Factor de corrección de tasa (calibración). Default 1. */
   rateFactor?: number;
+  priceInfo?: PriceTrendInfo;
 }): CompanyReport {
   const automation = automationDailyProd(args.upgradesConfig, args.company.upgrades.automatedEngine);
   const dailyProductionRate = (automation + (args.workerDailyOutput ?? 0)) * (args.rateFactor ?? 1);
@@ -64,5 +67,6 @@ export function assembleCompanyReport(args: {
     stock: args.company.production,
     storageMax: storageMax(args.upgradesConfig, args.company.upgrades.storage),
     dailyProductionRate,
+    price: args.priceInfo,
   };
 }

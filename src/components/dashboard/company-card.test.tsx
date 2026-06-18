@@ -18,6 +18,7 @@ function report(net: number): CompanyReport {
     stock: 50,
     storageMax: 200,
     dailyProductionRate: 72,
+    price: { current: 1.6, avg: 1.4, trend: "up" as const },
   };
 }
 
@@ -29,6 +30,7 @@ describe("CompanyCard", () => {
     expect(screen.getByText("Producción/día")).toBeInTheDocument();
     expect(screen.getByText("Stock")).toBeInTheDocument();
     expect(screen.getAllByText("rentable").length).toBeGreaterThan(0);
+    expect(screen.getByText("(prom 1.40)")).toBeInTheDocument();
   });
 
   it("muestra pérdida con signo negativo", () => {

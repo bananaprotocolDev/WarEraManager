@@ -1,6 +1,8 @@
 import type { WareraClient } from "@/lib/warera/client";
 import { toItemDef } from "@/lib/economy";
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
+import { priceTrendFor } from "./price-trend-for";
+import type { PriceHistoryStore } from "@/lib/db/price-store";
 
 export type { CompanyReport };
 
@@ -20,6 +22,7 @@ export interface BuildPortfolioOptions {
   authenticated: boolean;
   /** Factor de corrección de tasa (calibración). Las rutas lo inyectan; default 1. */
   rateFactor?: number;
+  priceStore?: PriceHistoryStore;
 }
 
 /**
@@ -72,7 +75,8 @@ export async function buildPortfolio(
       workerCount: c.workerCount,
       upgrades: c.activeUpgradeLevels, // { automatedEngine, breakRoom, storage }
     };
-    const report = assembleCompanyReport({ company, item, workers, prices, taxes, upgradesConfig: gameConfig.upgradesConfig, rateFactor: opts.rateFactor });
+    const priceInfo = priceTrendFor(opts.priceStore, c.itemCode, prices);
+    const report = assembleCompanyReport({ company, item, workers, prices, taxes, upgradesConfig: gameConfig.upgradesConfig, rateFactor: opts.rateFactor, priceInfo });
     companies.push(report);
   }
 

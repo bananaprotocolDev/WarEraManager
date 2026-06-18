@@ -68,4 +68,11 @@ describe("buildPortfolio", () => {
     expect(r.companies[0].profit.wageCost).toBe(0);
     expect(r.wagesAvailable).toBe(false);
   });
+
+  it("incluye tendencia de precio si se inyecta el store", async () => {
+    const priceStore = { getHistory: () => [{ ts: 1, price: 1.0 }, { ts: 2, price: 1.0 }], recordSnapshot: () => {}, listItems: () => [] } as never;
+    const r = await buildPortfolio(fakeClient(), { userId: "u1", authenticated: true, priceStore });
+    // precio actual bread 1.5 vs prom 1.0 → up
+    expect(r.companies[0].price?.trend).toBe("up");
+  });
 });

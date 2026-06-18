@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, UserPlus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/ui/status-dot";
+import { PriceTrendBadge } from "@/components/price-trend-badge";
 import { companyStatus } from "@/lib/ui/company-status";
 import { formatPerDay, formatMoney } from "@/lib/format";
 import type { CompanyReport } from "@/server/portfolio";
@@ -33,6 +34,11 @@ export function CompanyCard({ company }: { company: CompanyReport }) {
           <dt>Stock</dt>
           <dd className="tabular text-right text-foreground">{formatMoney(company.stock)} / {formatMoney(company.storageMax)}</dd>
         </dl>
+        {company.price ? (
+          <div className="mt-2">
+            <PriceTrendBadge price={company.price} />
+          </div>
+        ) : null}
         {company.maxWageToHire > 0 ? (
           <div className="mt-3 flex items-center gap-1.5 text-xs text-accent">
             <UserPlus className="h-3.5 w-3.5" aria-hidden="true" /> Pagar hasta {formatMoney(company.maxWageToHire)} /punto

@@ -22,7 +22,7 @@ describe("GET /api/company/[id]", () => {
       ctx("c1"),
     );
     expect(res.status).toBe(200);
-    expect(mock).toHaveBeenCalledWith(expect.anything(), { companyId: "c1", userId: "u1", authenticated: true });
+    expect(mock).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ companyId: "c1", userId: "u1", authenticated: true }));
   });
 
   it("502 si el servicio falla", async () => {

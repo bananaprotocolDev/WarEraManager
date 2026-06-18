@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema } from "./schemas";
+import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema, transactionsPageSchema } from "./schemas";
 
 describe("warera schemas", () => {
   it("desenvuelve la forma tRPC { result: { data } }", () => {
@@ -65,5 +65,22 @@ describe("userLiteSchema", () => {
   it("acepta country ausente", () => {
     const u = userLiteSchema.parse({ _id: "u2", username: "x" });
     expect(u.country).toBeUndefined();
+  });
+});
+
+describe("transactionsPageSchema", () => {
+  it("parsea items con campos de venta y nextCursor", () => {
+    const p = transactionsPageSchema.parse({
+      items: [{ sellerId: "u1", money: 10, quantity: 5, createdAt: "2026-06-17T00:00:00.000Z", extra: 1 }],
+      nextCursor: "abc",
+    });
+    expect(p.items[0].sellerId).toBe("u1");
+    expect(p.items[0].quantity).toBe(5);
+    expect(p.nextCursor).toBe("abc");
+  });
+
+  it("tolera items vacíos y sin cursor", () => {
+    const p = transactionsPageSchema.parse({ items: [] });
+    expect(p.items).toEqual([]);
   });
 });

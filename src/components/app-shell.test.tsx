@@ -13,6 +13,7 @@ describe("AppShell", () => {
     expect(screen.getByText("Token activo")).toBeInTheDocument();
     expect(screen.getByText("contenido")).toBeInTheDocument();
     expect(screen.getByText("Optimizador")).toBeInTheDocument();
+    expect(screen.getByText("Calibrar")).toBeInTheDocument();
   });
 
   it("muestra 'Sin token' por defecto", () => {

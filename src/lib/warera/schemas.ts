@@ -79,6 +79,22 @@ export const userLiteSchema = z
   })
   .passthrough();
 
+/** Una transacción (de transaction.getPaginatedTransactions). Tolerante a campos extra. */
+export const transactionSchema = z
+  .object({
+    sellerId: z.string().optional(),
+    money: z.number().optional(),
+    quantity: z.number().optional(),
+    createdAt: z.string().optional(),
+  })
+  .passthrough();
+
+/** Página de transacciones. */
+export const transactionsPageSchema = z.object({
+  items: z.array(transactionSchema),
+  nextCursor: z.string().nullable().optional(),
+});
+
 /** country.getCountryById -> impuestos. */
 export const countrySchema = z
   .object({

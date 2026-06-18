@@ -17,4 +17,14 @@ describe("priceTrendFor", () => {
     expect(r?.trend).toBe("up");
     expect(r?.avg).toBeCloseTo(1.0);
   });
+  it("si la DB falla → undefined (no-fatal)", async () => {
+    const failing = {
+      getHistory: async () => {
+        throw new Error("neon down");
+      },
+      recordSnapshot: async () => {},
+      listItems: async () => [],
+    };
+    expect(await priceTrendFor(failing, "steel", { steel: 1.5 })).toBeUndefined();
+  });
 });

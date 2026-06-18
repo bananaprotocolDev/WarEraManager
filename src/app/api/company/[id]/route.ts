@@ -1,5 +1,6 @@
 import { WareraClient } from "@/lib/warera/client";
 import { buildCompanyDetail } from "@/server/company-detail";
+import { getRateFactor } from "@/server/calibration-factor";
 
 export async function GET(
   req: Request,
@@ -17,6 +18,7 @@ export async function GET(
       companyId: id,
       userId,
       authenticated: Boolean(apiKey),
+      rateFactor: getRateFactor(),
     });
     return Response.json(detail);
   } catch (e) {

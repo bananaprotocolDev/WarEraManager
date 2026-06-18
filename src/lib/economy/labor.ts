@@ -43,3 +43,8 @@ export function productionValueForLevel(level: number): number {
 export function levelForProductionValue(value: number): number {
   return Math.max(0, Math.ceil((value - 10) / 3));
 }
+
+/** Valor del skill de energía para un nivel (30 base, +10 por nivel). */
+export function energyValueForLevel(level: number): number {
+  return 30 + 10 * level;
+}

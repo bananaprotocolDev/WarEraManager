@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema, transactionsPageSchema, workOffersPageSchema } from "./schemas";
 import { gameConfigSchema as gcSchema2, companySchema as cSchema2 } from "./schemas";
+import { workersSchema as wSchema2, userLiteSchema as ulSchema2 } from "./schemas";
 
 describe("warera schemas", () => {
   it("desenvuelve la forma tRPC { result: { data } }", () => {
@@ -125,5 +126,23 @@ describe("workOffersPageSchema", () => {
     });
     expect(p.items[0].wage).toBeCloseTo(0.153);
     expect(p.items[0].minProduction).toBe(50);
+  });
+});
+
+describe("workers + userLite skills", () => {
+  it("workersSchema trae user, wage y fidelity (default 0)", () => {
+    const w = wSchema2.parse([{ user: "u1", wage: 0.5, fidelity: 3 }, { user: "u2", wage: 1 }]);
+    expect(w[0]).toMatchObject({ user: "u1", wage: 0.5, fidelity: 3 });
+    expect(w[1].fidelity).toBe(0);
+  });
+  it("userLiteSchema parsea skills.production.value y energy.value", () => {
+    const u = ulSchema2.parse({ _id: "u1", username: "x", skills: { production: { value: 25 }, energy: { value: 80 } } });
+    expect(u.skills.production.value).toBe(25);
+    expect(u.skills.energy.value).toBe(80);
+  });
+  it("userLiteSchema tolera skills ausentes (valores 0)", () => {
+    const u = ulSchema2.parse({ _id: "u2", username: "y" });
+    expect(u.skills.production.value).toBe(0);
+    expect(u.skills.energy.value).toBe(0);
   });
 });

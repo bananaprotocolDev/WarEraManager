@@ -38,6 +38,12 @@ describe("buildPortfolio", () => {
     expect(r.estimated).toBe(true);
   });
 
+  it("aplica el rateFactor a la tasa de producción", async () => {
+    const r = await buildPortfolio(fakeClient(), { userId: "u1", authenticated: true, rateFactor: 0.5 });
+    // automatización 72 × 0.5 = 36
+    expect(r.companies[0].dailyProductionRate).toBe(36);
+  });
+
   it("sin autenticación no intenta leer salarios (wageCost=0, wagesAvailable=false)", async () => {
     let called = false;
     const client = fakeClient({

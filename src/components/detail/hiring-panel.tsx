@@ -1,17 +1,20 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, CheckCircle2, XCircle } from "lucide-react";
-import { formatMoney } from "@/lib/format";
+import { UserPlus, CheckCircle2, XCircle, Link2 } from "lucide-react";
+import { formatMoney, formatPerDay } from "@/lib/format";
 import type { HiringRecommendation } from "@/lib/economy";
+import type { ChainNet } from "@/lib/economy";
 
 const REASON: Record<string, string> = {
   item_unprofitable: "El producto no deja margen: no conviene producir.",
-  no_slots: "No hay slots libres (subí la Sala de descanso).",
+  no_slots: "No hay cupos libres (subí los cupos de trabajadores).",
   no_demand: "Ya producís más de lo que vendés: contratar solo llenaría el almacén.",
-  ok: "Conviene contratar.",
+  market_expensive: "El mercado laboral está caro: el sueldo supera lo que aporta el trabajador.",
+  ok: "El margen cubre el sueldo de mercado: podés contratar rentablemente.",
 };
 
-export function HiringPanel({ hiring }: { hiring: HiringRecommendation }) {
+export function HiringPanel({ hiring, chain }: { hiring: HiringRecommendation; chain: ChainNet | null }) {
+  const net = hiring.netPerWorkerPerDay;
   return (
     <Card className="cursor-default">
       <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -30,22 +33,17 @@ export function HiringPanel({ hiring }: { hiring: HiringRecommendation }) {
       </div>
       <p className="mt-1 text-xs text-muted-foreground">{REASON[hiring.reason]}</p>
 
-      {hiring.viable ? (
-        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-          <dt className="text-muted-foreground">Salario máx /punto</dt>
-          <dd className="tabular text-right">{formatMoney(hiring.maxWagePerPoint)}</dd>
-          <dt className="text-muted-foreground">Salario sugerido /punto</dt>
-          <dd className="tabular text-right text-accent">{formatMoney(hiring.suggestedWage)}</dd>
-          <dt className="text-muted-foreground">Slots libres</dt>
-          <dd className="tabular text-right">{hiring.freeSlots}</dd>
-          <dt className="text-muted-foreground">Ganancia extra/día (est.)</dt>
-          <dd className="tabular text-right text-success">
-            {formatMoney(hiring.expectedDailyGain)}
-            {!hiring.demandKnown ? (
-              <span className="ml-1 text-xs font-sans text-muted-foreground">(supuesto)</span>
-            ) : null}
-          </dd>
-        </dl>
+      <div className={`mt-3 tabular text-2xl font-bold ${net >= 0 ? "text-success" : "text-destructive"}`}>
+        {formatPerDay(net)} <span className="text-xs font-normal text-muted-foreground">/ trabajador/día</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        costo laboral: ~{formatMoney(hiring.marketWagePerDay)}/día · aporte: ~{formatMoney(hiring.addsPerDay)}/día
+      </p>
+      <p className="text-xs text-muted-foreground">
+        salario máx pagable ~{formatMoney(hiring.maxWagePerPoint)}/punto
+      </p>
+      {!hiring.marketDataAvailable ? (
+        <p className="mt-1 text-xs text-warning">Sin datos de mercado laboral: el neto es solo el aporte (sin sueldo descontado).</p>
       ) : null}
 
       {hiring.viable ? (
@@ -57,6 +55,15 @@ export function HiringPanel({ hiring }: { hiring: HiringRecommendation }) {
             <Badge>min nivel: {hiring.recommendedProfile.minLevel}</Badge>
           </div>
         </div>
+      ) : null}
+
+      {chain ? (
+        <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Parte de la cadena <span className="font-mono">{chain.steps.join("→")}</span> · neto cadena{" "}
+          <span className={chain.netPerDay >= 0 ? "text-success" : "text-destructive"}>{formatPerDay(chain.netPerDay)}</span>
+          {" "}· mejor destino del raw: {chain.bestRawDestination === "sell" ? "vender" : "procesar"}
+        </p>
       ) : null}
     </Card>
   );

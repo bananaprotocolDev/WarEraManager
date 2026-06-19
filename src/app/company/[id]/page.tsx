@@ -122,7 +122,7 @@ export default function CompanyDetailPage() {
                 />
               </div>
 
-              <HiringPanel hiring={data.hiring} />
+              <HiringPanel hiring={data.hiring} chain={data.chain} />
 
               <Card className="cursor-default">
                 <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

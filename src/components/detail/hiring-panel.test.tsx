@@ -3,34 +3,38 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { HiringPanel } from "./hiring-panel";
 
+const base = {
+  viable: true, reason: "ok" as const, maxWagePerPoint: 0.09, suggestedWage: 0.05,
+  freeSlots: 2, demandKnown: true, recommendedProfile: { minProduction: 50, minEnergy: 50, minLevel: 14 },
+  expectedDailyGain: 1, addsPerDay: 3, marketWagePerDay: 1, netPerWorkerPerDay: 2, marketDataAvailable: true,
+};
+
 describe("HiringPanel", () => {
-  it("muestra el perfil y salarios cuando conviene", () => {
-    render(
-      <HiringPanel
-        hiring={{
-          viable: true, reason: "ok", maxWagePerPoint: 1.17, suggestedWage: 0.5, freeSlots: 2,
-          demandKnown: true, marketDataAvailable: true,
-          recommendedProfile: { minProduction: 50, minEnergy: 50, minLevel: 14 },
-          expectedDailyGain: 80, addsPerDay: 10, marketWagePerDay: 5, netPerWorkerPerDay: 5,
-        }}
-      />,
-    );
-    expect(screen.getByText("Conviene contratar")).toBeInTheDocument();
-    expect(screen.getByText("min producción: 50")).toBeInTheDocument();
+  it("muestra neto/trabajador/día y el veredicto conviene", () => {
+    render(<HiringPanel hiring={base} chain={null} />);
+    expect(screen.getByText(/Conviene contratar/i)).toBeInTheDocument();
+    expect(screen.getByText(/trabajador\/día/i)).toBeInTheDocument();
   });
 
-  it("muestra el motivo cuando no conviene", () => {
+  it("muestra motivo mercado caro cuando no conviene por salario", () => {
+    render(<HiringPanel hiring={{ ...base, viable: false, reason: "market_expensive", netPerWorkerPerDay: -1 }} chain={null} />);
+    expect(screen.getByText(/No conviene/i)).toBeInTheDocument();
+    expect(screen.getByText(/mercado/i)).toBeInTheDocument();
+  });
+
+  it("muestra aviso cuando faltan datos de mercado laboral", () => {
+    render(<HiringPanel hiring={{ ...base, marketDataAvailable: false }} chain={null} />);
+    expect(screen.getByText(/datos de mercado/i)).toBeInTheDocument();
+  });
+
+  it("muestra la línea de cadena cuando pertenece a una", () => {
     render(
       <HiringPanel
-        hiring={{
-          viable: false, reason: "no_demand", maxWagePerPoint: 1.17, suggestedWage: 0, freeSlots: 2,
-          demandKnown: true, marketDataAvailable: false,
-          recommendedProfile: { minProduction: 0, minEnergy: 0, minLevel: 0 },
-          expectedDailyGain: 0, addsPerDay: 0, marketWagePerDay: 0, netPerWorkerPerDay: 0,
-        }}
+        hiring={base}
+        chain={{ steps: ["petroleum", "oil"], netPerDay: -2.5, bestRawDestination: "sell", measured: false }}
       />,
     );
-    expect(screen.getByText("No conviene")).toBeInTheDocument();
-    expect(screen.getByText(/llenaría el almacén/)).toBeInTheDocument();
+    expect(screen.getByText(/petroleum/)).toBeInTheDocument();
+    expect(screen.getByText(/oil/)).toBeInTheDocument();
   });
 });

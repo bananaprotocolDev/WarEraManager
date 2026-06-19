@@ -71,6 +71,11 @@ describe("buildCompanyDetail", () => {
     expect(d.report.price?.trend).toBe("up");
   });
 
+  it("chain es null cuando no hay cadena (sin empresas propias)", async () => {
+    const detail = await buildCompanyDetail(fakeClient(), { companyId: "c1", userId: "u1", authenticated: false });
+    expect(detail.chain).toBeNull();
+  });
+
   it("expone destination y la cadena cuando se posee el downstream", async () => {
     const chainClient = fakeClient({
       getUserCompanies: async () => ({ items: ["petroleumId", "oilId"] }),
@@ -113,7 +118,7 @@ describe("buildCompanyDetail", () => {
     });
 
     const detail = await buildCompanyDetail(chainClient, {
-      companyId: "petroleumId", userId: "u1", authenticated: false,
+      companyId: "petroleumId", userId: "u1", authenticated: true,
     });
     expect(detail.report.destination).toBeDefined();
     expect(detail.chain).not.toBeNull();

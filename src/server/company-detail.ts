@@ -102,7 +102,9 @@ export async function buildCompanyDetail(
   const priceInfo = await priceTrendFor(opts.priceStore, c.itemCode, prices);
 
   // Empresas propias (para destino del raw y detección de cadena).
-  const ownedIds = await client.getUserCompanies(opts.userId).then((r) => r.items).catch(() => []);
+  const ownedIds = opts.authenticated
+    ? await client.getUserCompanies(opts.userId).then((r) => r.items).catch(() => [])
+    : [];
   const ownedRaw = await Promise.all(
     ownedIds.map((oid) =>
       oid === c._id ? Promise.resolve(c) : client.getCompanyById(oid).catch(() => null),
@@ -152,6 +154,10 @@ export async function buildCompanyDetail(
     laborConstants: LABOR_CONSTANTS,
   });
 
+  // Cadena (vista de detalle, aproximación v1): el dashboard (buildPortfolio) es la fuente
+  // con sueldos reales por empresa. Aquí, para empresas socias usamos su stock (`production`)
+  // como proxy de tasa diaria y omitimos sueldos (wageCostPerDay: 0), porque traer trabajadores
+  // y tasas reales de cada socia encarecería el detalle. El número fiable de la cadena vive en el dashboard.
   const chainCompanies: ChainCompany[] = owned.map((o) => ({
     id: o._id,
     itemCode: o.itemCode,
@@ -159,6 +165,7 @@ export async function buildCompanyDetail(
     dailyProductionRate: o._id === c._id ? reportWithSell.dailyProductionRate : (o.production ?? 0),
     wageCostPerDay: 0,
   }));
+  // Si el ítem aparece en varias cadenas, se toma la primera (v1).
   const myChain = detectChains(chainCompanies).find((ch) => ch.steps.includes(c.itemCode)) ?? null;
   const chain: ChainNet | null = myChain
     ? chainNetPerDay({

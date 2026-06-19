@@ -63,4 +63,27 @@ describe("assembleCompanyReport", () => {
     expect(r.isFull).toBe(true);
     expect(r.estimatedValue).toBe(500);
   });
+
+  it("modelo aplica bonus de país (potentialRate) y marca estimated", () => {
+    const r = assembleCompanyReport({
+      company, item: bread, workers: [], prices, taxes, upgradesConfig,
+      workerDailyOutput: 0, productionBonus: 0.25,
+    });
+    // modelo = (72 + 0) × 1.25 = 90
+    expect(r.dailyProductionRate).toBeCloseTo(90);
+    expect(r.potentialRate).toBeCloseTo(90);
+    expect(r.measured).toBe(false);
+    expect(r.profit.estimated).toBe(true);
+  });
+
+  it("con measuredRate usa el real y marca measured (no estimado)", () => {
+    const r = assembleCompanyReport({
+      company, item: bread, workers: [], prices, taxes, upgradesConfig,
+      workerDailyOutput: 0, productionBonus: 0.25, measuredRate: 40,
+    });
+    expect(r.dailyProductionRate).toBe(40); // real
+    expect(r.potentialRate).toBeCloseTo(90); // modelo, para comparar
+    expect(r.measured).toBe(true);
+    expect(r.profit.estimated).toBe(false);
+  });
 });

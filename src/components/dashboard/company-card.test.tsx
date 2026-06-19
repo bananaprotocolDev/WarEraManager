@@ -18,6 +18,8 @@ function report(net: number): CompanyReport {
     stock: 50,
     storageMax: 200,
     dailyProductionRate: 72,
+    potentialRate: 72,
+    measured: false,
     price: { current: 1.6, avg: 1.4, trend: "up" as const },
     name: "MI CORP",
     rarity: "uncommon",
@@ -31,7 +33,7 @@ describe("CompanyCard", () => {
     render(<CompanyCard company={report(28.4)} />);
     expect(screen.getByText("bread")).toBeInTheDocument();
     expect(screen.getByText("+28.40 /día")).toBeInTheDocument();
-    expect(screen.getByText("Producción/día")).toBeInTheDocument();
+    expect(screen.getByText(/Producción\/día/)).toBeInTheDocument();
     expect(screen.getByText("Stock")).toBeInTheDocument();
     expect(screen.getAllByText("rentable").length).toBeGreaterThan(0);
     expect(screen.getByText("(prom 1.40)")).toBeInTheDocument();

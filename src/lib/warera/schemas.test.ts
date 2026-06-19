@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema, transactionsPageSchema, workOffersPageSchema } from "./schemas";
+import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema, transactionsPageSchema, workOffersPageSchema, countrySchema } from "./schemas";
 import { gameConfigSchema as gcSchema2, companySchema as cSchema2 } from "./schemas";
 import { workersSchema as wSchema2, userLiteSchema as ulSchema2 } from "./schemas";
 import { companySchema as cSchema3, gameItemSchema as giSchema3 } from "./schemas";
@@ -148,6 +148,21 @@ describe("company name/isFull/estimatedValue + item rarity", () => {
   it("gameItemSchema parsea rarity (default common)", () => {
     expect(giSchema3.parse({ type: "product", productionPoints: 10, productionNeeds: { iron: 10 }, rarity: "uncommon" }).rarity).toBe("uncommon");
     expect(giSchema3.parse({ type: "raw", productionPoints: 1 }).rarity).toBe("common");
+  });
+});
+
+describe("countrySchema productionBonus", () => {
+  it("deriva productionBonus = productionPercent/100", () => {
+    const c = countrySchema.parse({
+      taxes: { market: 10 },
+      strategicResources: { bonuses: { productionPercent: 20 } },
+    });
+    expect(c.taxes.market).toBe(10);
+    expect(c.productionBonus).toBeCloseTo(0.2);
+  });
+  it("sin strategicResources → productionBonus 0", () => {
+    const c = countrySchema.parse({ taxes: {} });
+    expect(c.productionBonus).toBe(0);
   });
 });
 

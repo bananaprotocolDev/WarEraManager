@@ -172,21 +172,31 @@ export const workOffersPageSchema = z.object({
   nextCursor: z.string().nullable().optional(),
 });
 
-/** country.getCountryById -> impuestos. */
+const taxesSchema = z
+  .object({
+    income: z.number().default(0),
+    market: z.number().default(0),
+    selfWork: z.number().default(0),
+  })
+  .partial()
+  .transform((t) => ({ income: t.income ?? 0, market: t.market ?? 0, selfWork: t.selfWork ?? 0 }))
+  .default({ income: 0, market: 0, selfWork: 0 });
+
+/** country.getCountryById -> impuestos + bonus de producción del país. */
 export const countrySchema = z
   .object({
-    taxes: z
+    taxes: taxesSchema,
+    strategicResources: z
       .object({
-        income: z.number().default(0),
-        market: z.number().default(0),
-        selfWork: z.number().default(0),
+        bonuses: z
+          .object({ productionPercent: z.number().default(0) })
+          .partial()
+          .transform((b) => ({ productionPercent: b.productionPercent ?? 0 }))
+          .default({ productionPercent: 0 }),
       })
       .partial()
-      .transform((t) => ({
-        income: t.income ?? 0,
-        market: t.market ?? 0,
-        selfWork: t.selfWork ?? 0,
-      }))
-      .default({ income: 0, market: 0, selfWork: 0 }),
+      .transform((s) => ({ bonuses: s.bonuses ?? { productionPercent: 0 } }))
+      .default({ bonuses: { productionPercent: 0 } }),
   })
-  .passthrough();
+  .passthrough()
+  .transform((c) => ({ taxes: c.taxes, productionBonus: c.strategicResources.bonuses.productionPercent / 100 }));

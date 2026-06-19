@@ -24,6 +24,7 @@ function fakeClient(overrides: Partial<Record<string, unknown>> = {}) {
     }),
     getWorkOffers: async () => ({ items: [{ wage: 0.5, minEnergy: 50, minProduction: 50 }], nextCursor: null }),
     getUserItemTransactions: async () => ({ items: [], nextCursor: null }),
+    getUserCompanies: async () => ({ items: [] as string[] }),
     ...overrides,
   } as never;
 }
@@ -68,5 +69,54 @@ describe("buildCompanyDetail", () => {
     const d = await buildCompanyDetail(fakeClient(), { companyId: "c1", userId: "u1", authenticated: true, priceStore });
     // precio actual bread 1.5 vs prom 1.0 → up
     expect(d.report.price?.trend).toBe("up");
+  });
+
+  it("expone destination y la cadena cuando se posee el downstream", async () => {
+    const chainClient = fakeClient({
+      getUserCompanies: async () => ({ items: ["petroleumId", "oilId"] }),
+      getCompanyById: async (id: string) => {
+        if (id === "petroleumId") {
+          return {
+            _id: "petroleumId", itemCode: "petroleum", production: 0, workerCount: 0,
+            activeUpgradeLevels: { automatedEngine: 1, breakRoom: 1, storage: 1 },
+            name: "OPC", isFull: false, estimatedValue: 0,
+          };
+        }
+        if (id === "oilId") {
+          return {
+            _id: "oilId", itemCode: "oil", production: 0, workerCount: 0,
+            activeUpgradeLevels: { automatedEngine: 1, breakRoom: 1, storage: 1 },
+            name: "OilCo", isFull: false, estimatedValue: 0,
+          };
+        }
+        // fallback (shouldn't happen in this test)
+        return {
+          _id: id, itemCode: "petroleum", production: 0, workerCount: 0,
+          activeUpgradeLevels: { automatedEngine: 1, breakRoom: 1, storage: 1 },
+          name: "", isFull: false, estimatedValue: 0,
+        };
+      },
+      getPrices: async () => ({ petroleum: 2.0, oil: 10.0 }),
+      getGameConfig: async () => ({
+        items: {
+          petroleum: { type: "raw", productionPoints: 1, productionNeeds: {} },
+          oil: { type: "product", productionPoints: 1, productionNeeds: { petroleum: 1 } },
+        },
+        upgradesConfig: {
+          automatedEngine: { levels: { "1": { stats: { dailyProd: 24 } } } },
+          storage: { levels: { "1": { stats: { maxProduction: 200 } } } },
+          breakRoom: { levels: { "1": { stats: { maxWorkers: 2 } } } },
+        },
+      }),
+      getWorkOffers: async () => ({ items: [], nextCursor: null }),
+      getUserItemTransactions: async () => ({ items: [], nextCursor: null }),
+    });
+
+    const detail = await buildCompanyDetail(chainClient, {
+      companyId: "petroleumId", userId: "u1", authenticated: false,
+    });
+    expect(detail.report.destination).toBeDefined();
+    expect(detail.chain).not.toBeNull();
+    expect(detail.chain?.steps).toEqual(["petroleum", "oil"]);
   });
 });

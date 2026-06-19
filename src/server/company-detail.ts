@@ -5,7 +5,14 @@ import {
   LABOR_CONSTANTS,
   summarizeLaborMarket,
   hiringRecommendation,
+  bestDestinationValue,
+  inputCostPerUnit,
+  detectChains,
+  chainNetPerDay,
   type HiringRecommendation,
+  type ChainNet,
+  type ChainCompany,
+  type ItemDef,
 } from "@/lib/economy";
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
 import { realizedSalesPerDay } from "./sell-rate";
@@ -29,6 +36,8 @@ export interface CompanyDetail {
   estimated: boolean;
   hiring: HiringRecommendation;
   sellPerDay: number | null;
+  /** Veredicto de la cadena a la que pertenece esta empresa (null si no pertenece). */
+  chain: ChainNet | null;
 }
 
 export interface BuildCompanyDetailOptions {
@@ -92,6 +101,31 @@ export async function buildCompanyDetail(
 
   const priceInfo = await priceTrendFor(opts.priceStore, c.itemCode, prices);
 
+  // Empresas propias (para destino del raw y detección de cadena).
+  const ownedIds = await client.getUserCompanies(opts.userId).then((r) => r.items).catch(() => []);
+  const ownedRaw = await Promise.all(
+    ownedIds.map((oid) =>
+      oid === c._id ? Promise.resolve(c) : client.getCompanyById(oid).catch(() => null),
+    ),
+  );
+  const owned = ownedRaw.filter((x): x is NonNullable<typeof x> => x != null);
+  const ownedItem = (code: string): ItemDef =>
+    toItemDef(code, gameConfig.items[code] ?? { type: "product", productionPoints: 1, productionNeeds: {} });
+
+  // Mercado laboral (también costea la mano de obra de procesar para el destino).
+  const offers = await client.getWorkOffers({ limit: 20 }).then((r) => r.items).catch(() => []);
+  const market = summarizeLaborMarket(offers);
+
+  // Downstream propio que consume este ítem (si existe).
+  const downstreamCompany = owned.find(
+    (o) => ownedItem(o.itemCode).productionNeeds[c.itemCode] != null,
+  );
+  const itemValue = bestDestinationValue({
+    item, prices, taxes,
+    downstream: downstreamCompany ? { item: ownedItem(downstreamCompany.itemCode) } : null,
+    marketWagePerPoint: market.medianWage ?? 0,
+  });
+
   // Recalcular el report con measuredRate si lo conocemos (afecta usefulRate).
   const reportWithSell = assembleCompanyReport({
     company, item, workers, prices, taxes,
@@ -101,13 +135,15 @@ export async function buildCompanyDetail(
     workerDailyOutput,
     rateFactor: opts.rateFactor,
     priceInfo,
+    itemValue,
   });
 
-  const offers = await client.getWorkOffers({ limit: 20 }).then((r) => r.items).catch(() => []);
-  const market = summarizeLaborMarket(offers);
   const slots = maxWorkers(gameConfig.upgradesConfig, c.activeUpgradeLevels.breakRoom);
   const hiring = hiringRecommendation({
     marginPerUnit: reportWithSell.marginPerUnit,
+    unitValue: itemValue.unitValue,
+    inputCostPerUnit: inputCostPerUnit(item, prices),
+    prodPoints: item.productionPoints,
     maxWagePerPoint: reportWithSell.maxWageToHire,
     currentDailyRate: reportWithSell.dailyProductionRate,
     freeSlots: Math.max(0, slots - c.workerCount),
@@ -115,6 +151,22 @@ export async function buildCompanyDetail(
     market,
     laborConstants: LABOR_CONSTANTS,
   });
+
+  const chainCompanies: ChainCompany[] = owned.map((o) => ({
+    id: o._id,
+    itemCode: o.itemCode,
+    item: ownedItem(o.itemCode),
+    dailyProductionRate: o._id === c._id ? reportWithSell.dailyProductionRate : (o.production ?? 0),
+    wageCostPerDay: 0,
+  }));
+  const myChain = detectChains(chainCompanies).find((ch) => ch.steps.includes(c.itemCode)) ?? null;
+  const chain: ChainNet | null = myChain
+    ? chainNetPerDay({
+        chain: myChain, prices, taxes,
+        measured: reportWithSell.measured,
+        rawDestination: itemValue.destination,
+      })
+    : null;
 
   const recipe: RecipeEntry[] = Object.entries(item.productionNeeds).map(([input, qtyPerUnit]) => ({
     input,
@@ -132,5 +184,6 @@ export async function buildCompanyDetail(
     estimated: reportWithSell.profit.estimated,
     hiring,
     sellPerDay: measuredRate ?? null,
+    chain,
   };
 }

@@ -37,7 +37,7 @@ export function HiringPanel({ hiring, chain }: { hiring: HiringRecommendation; c
         {formatPerDay(net)} <span className="text-xs font-normal text-muted-foreground">/ trabajador/día</span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        costo laboral: ~{formatMoney(hiring.marketWagePerDay)}/día · aporte: ~{formatMoney(hiring.addsPerDay)}/día
+        el mercado pide ~{formatMoney(hiring.marketWagePerDay)}/día · te aporta ~{formatMoney(hiring.addsPerDay)}/día
       </p>
       <p className="text-xs text-muted-foreground">
         salario máx pagable ~{formatMoney(hiring.maxWagePerPoint)}/punto

@@ -8,4 +8,5 @@ export * from "./upgrades";
 export * from "./labor";
 export * from "./labor-market";
 export * from "./hiring-recommender";
+export * from "./item-value";
 export * from "./price-trend";

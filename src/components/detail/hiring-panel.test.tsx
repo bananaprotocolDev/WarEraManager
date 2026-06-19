@@ -19,7 +19,7 @@ describe("HiringPanel", () => {
   it("muestra motivo mercado caro cuando no conviene por salario", () => {
     render(<HiringPanel hiring={{ ...base, viable: false, reason: "market_expensive", netPerWorkerPerDay: -1 }} chain={null} />);
     expect(screen.getByText(/No conviene/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/mercado/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/mercado laboral está caro/i)).toBeInTheDocument();
   });
 
   it("muestra aviso cuando faltan datos de mercado laboral", () => {
@@ -36,5 +36,6 @@ describe("HiringPanel", () => {
     );
     expect(screen.getByText(/petroleum/)).toBeInTheDocument();
     expect(screen.getByText(/oil/)).toBeInTheDocument();
+    expect(screen.getByText(/vender/i)).toBeInTheDocument();
   });
 });

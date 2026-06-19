@@ -5,7 +5,7 @@ import { buildPortfolio } from "./portfolio";
 function fakeClient(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     getUserLite: async () => ({ _id: "u1", username: "me", country: "co1" }),
-    getCountryById: async () => ({ taxes: { income: 0, market: 10, selfWork: 0 } }),
+    getCountryById: async () => ({ taxes: { income: 0, market: 10, selfWork: 0 }, productionBonus: 0 }),
     getUserCompanies: async () => ({ items: ["c1"] }),
     getCompanyById: async () => ({
       _id: "c1", itemCode: "bread", production: 50, workerCount: 2,
@@ -17,6 +17,7 @@ function fakeClient(overrides: Partial<Record<string, unknown>> = {}) {
       items: { bread: { type: "product", productionPoints: 1, productionNeeds: { grain: 2 } } },
       upgradesConfig: { automatedEngine: { levels: { "3": { stats: { dailyProd: 72 } } } }, storage: { levels: { "1": { stats: { maxProduction: 200 } } } } },
     }),
+    getUserItemTransactions: async () => ({ items: [], nextCursor: null }),
     ...overrides,
   } as never;
 }
@@ -76,5 +77,15 @@ describe("buildPortfolio", () => {
     const r = await buildPortfolio(fakeClient(), { userId: "u1", authenticated: true, priceStore });
     // precio actual bread 1.5 vs prom 1.0 → up
     expect(r.companies[0].price?.trend).toBe("up");
+  });
+
+  it("usa la venta real como tasa cuando hay token y ventas", async () => {
+    const client = fakeClient({
+      getUserItemTransactions: async () => ({ items: [{ sellerId: "u1", quantity: 700, createdAt: new Date().toISOString() }], nextCursor: null }),
+    });
+    const r = await buildPortfolio(client, { userId: "u1", authenticated: true });
+    // 700/7 = 100/día real
+    expect(r.companies[0].dailyProductionRate).toBe(100);
+    expect(r.companies[0].measured).toBe(true);
   });
 });

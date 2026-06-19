@@ -7,7 +7,7 @@ function fakeClient(overrides: Partial<Record<string, unknown>> = {}) {
       _id: id, username: id, country: id === "u1" ? "co1" : undefined,
       skills: { production: { value: 0 }, energy: { value: 0 } },
     }),
-    getCountryById: async () => ({ taxes: { income: 0, market: 10, selfWork: 0 } }),
+    getCountryById: async () => ({ taxes: { income: 0, market: 10, selfWork: 0 }, productionBonus: 0 }),
     getCompanyById: async () => ({
       _id: "c1", itemCode: "bread", production: 10, workerCount: 2,
       activeUpgradeLevels: { automatedEngine: 3, breakRoom: 1, storage: 1 },
@@ -41,6 +41,8 @@ describe("buildCompanyDetail", () => {
     expect(d.recipe).toEqual([{ input: "grain", qtyPerUnit: 2 }]);
     expect(typeof d.report.name).toBe("string");
     expect(typeof d.report.rarity).toBe("string");
+    expect(typeof d.report.measured).toBe("boolean");
+    expect(typeof d.report.potentialRate).toBe("number");
   });
 
   it("sin auth: no lee trabajadores, wagesAvailable=false", async () => {

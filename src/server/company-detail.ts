@@ -52,9 +52,11 @@ export async function buildCompanyDetail(
     client.getCompanyById(opts.companyId),
   ]);
 
-  const taxes = user.country
-    ? (await client.getCountryById(user.country)).taxes
-    : { income: 0, market: 0, selfWork: 0 };
+  const country = user.country
+    ? await client.getCountryById(user.country)
+    : { taxes: { income: 0, market: 0, selfWork: 0 }, productionBonus: 0 };
+  const taxes = country.taxes;
+  const productionBonus = country.productionBonus;
 
   let workers: WorkerLite[] = [];
   let wagesAvailable = opts.authenticated;
@@ -84,17 +86,18 @@ export async function buildCompanyDetail(
     estimatedValue: c.estimatedValue ?? 0,
   };
 
-  const sellPerDay = opts.authenticated
-    ? await realizedSalesPerDay(client, opts.userId, c.itemCode, 7)
-    : null;
+  const measuredRate = opts.authenticated
+    ? (await realizedSalesPerDay(client, opts.userId, c.itemCode, 7)) ?? undefined
+    : undefined;
 
   const priceInfo = await priceTrendFor(opts.priceStore, c.itemCode, prices);
 
-  // Recalcular el report con sellPerDay si lo conocemos (afecta usefulRate).
+  // Recalcular el report con measuredRate si lo conocemos (afecta usefulRate).
   const reportWithSell = assembleCompanyReport({
     company, item, workers, prices, taxes,
     upgradesConfig: gameConfig.upgradesConfig,
-    sellPerDay: sellPerDay ?? undefined,
+    measuredRate,
+    productionBonus,
     workerDailyOutput,
     rateFactor: opts.rateFactor,
     priceInfo,
@@ -108,7 +111,7 @@ export async function buildCompanyDetail(
     maxWagePerPoint: reportWithSell.maxWageToHire,
     currentDailyRate: reportWithSell.dailyProductionRate,
     freeSlots: Math.max(0, slots - c.workerCount),
-    sellPerDay: sellPerDay ?? undefined,
+    sellPerDay: measuredRate,
     market,
     laborConstants: LABOR_CONSTANTS,
   });
@@ -128,6 +131,6 @@ export async function buildCompanyDetail(
     recipe,
     estimated: reportWithSell.profit.estimated,
     hiring,
-    sellPerDay,
+    sellPerDay: measuredRate ?? null,
   };
 }

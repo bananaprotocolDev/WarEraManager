@@ -9,6 +9,9 @@ export interface ReportCompany {
   production: number; // stock actual
   workerCount: number;
   upgrades: { automatedEngine: number; breakRoom: number; storage: number };
+  name: string;
+  isFull: boolean;
+  estimatedValue: number;
 }
 
 export interface CompanyReport {
@@ -25,6 +28,10 @@ export interface CompanyReport {
   /** Tasa de producción diaria (automatización en 7A; + trabajadores en 7B). */
   dailyProductionRate: number;
   price?: PriceTrendInfo;
+  name: string;
+  rarity: string;
+  isFull: boolean;
+  estimatedValue: number;
 }
 
 /** Reporte económico de UNA empresa con el modelo de tasa diaria (puro). */
@@ -68,5 +75,9 @@ export function assembleCompanyReport(args: {
     storageMax: storageMax(args.upgradesConfig, args.company.upgrades.storage),
     dailyProductionRate,
     price: args.priceInfo,
+    name: args.company.name,
+    rarity: args.item.rarity ?? "common",
+    isFull: args.company.isFull,
+    estimatedValue: args.company.estimatedValue,
   };
 }

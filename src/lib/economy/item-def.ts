@@ -6,6 +6,7 @@ interface RawItem {
   type: string;
   productionPoints: number;
   productionNeeds: Record<string, number>;
+  rarity?: string;
 }
 
 /** Convierte un item crudo de gameConfig en un ItemDef del dominio económico. */
@@ -18,5 +19,6 @@ export function toItemDef(code: string, raw: RawItem): ItemDef {
     type,
     productionPoints: raw.productionPoints,
     productionNeeds: raw.productionNeeds,
+    rarity: raw.rarity ?? "common",
   };
 }

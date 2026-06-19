@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/ui/status-dot";
+import { ItemImage } from "@/components/item-image";
+import { RarityBadge } from "@/components/rarity-badge";
 import { Breakdown } from "@/components/detail/breakdown";
 import { WorkersPanel } from "@/components/detail/workers-panel";
 import { HiringPanel } from "@/components/detail/hiring-panel";
@@ -63,16 +65,24 @@ export default function CompanyDetailPage() {
           const positive = data.report.profit.netProfit >= 0;
           return (
             <div className="flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <h1 className="flex items-center gap-2 text-2xl font-bold">
-                  <StatusDot color={status.color} label={LABEL[status.level]} />
-                  <span className="font-mono">{data.itemCode}</span>
-                </h1>
+              <div className="flex items-center gap-3">
+                <ItemImage code={data.itemCode} size={56} />
+                <div className="min-w-0 flex-1">
+                  <h1 className="flex items-center gap-2 text-2xl font-bold">
+                    <StatusDot color={status.color} label={LABEL[status.level]} />
+                    <span className="truncate">{data.report.name || data.itemCode}</span>
+                  </h1>
+                  <div className="mt-1 flex items-center gap-2 text-sm">
+                    <span className="font-mono text-muted-foreground">{data.itemCode}</span>
+                    <RarityBadge rarity={data.report.rarity} />
+                    <span className="tabular text-muted-foreground">· valor ≈ {formatMoney(data.report.estimatedValue)}</span>
+                  </div>
+                </div>
                 <Badge tone={status.color}>{LABEL[status.level]}</Badge>
               </div>
               <div className={`tabular text-3xl font-bold ${positive ? "text-success" : "text-destructive"}`}>
                 {formatPerDay(data.report.profit.netProfit)}
-                {data.estimated ? <span className="ml-2 text-xs text-muted-foreground">estimado</span> : null}
+                {data.report.profit.estimated ? <span className="ml-2 text-xs text-muted-foreground">estimado</span> : null}
               </div>
               {data.report.price ? (
                 <div>
@@ -82,7 +92,7 @@ export default function CompanyDetailPage() {
 
               <Card className="cursor-default">
                 <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Almacén</span>
+                  <span className="text-muted-foreground">Almacén{data.report.isFull ? <span className="ml-1 text-warning">lleno</span> : null}</span>
                   <span className="tabular">{formatMoney(data.report.stock)} / {formatMoney(data.report.storageMax)}</span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">

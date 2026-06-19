@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { trpcEnvelope, pricesSchema, companySchema, gameConfigSchema, userLiteSchema, transactionsPageSchema, workOffersPageSchema } from "./schemas";
 import { gameConfigSchema as gcSchema2, companySchema as cSchema2 } from "./schemas";
 import { workersSchema as wSchema2, userLiteSchema as ulSchema2 } from "./schemas";
+import { companySchema as cSchema3, gameItemSchema as giSchema3 } from "./schemas";
 
 describe("warera schemas", () => {
   it("desenvuelve la forma tRPC { result: { data } }", () => {
@@ -126,6 +127,27 @@ describe("workOffersPageSchema", () => {
     });
     expect(p.items[0].wage).toBeCloseTo(0.153);
     expect(p.items[0].minProduction).toBe(50);
+  });
+});
+
+describe("company name/isFull/estimatedValue + item rarity", () => {
+  it("companySchema parsea name, isFull, estimatedValue (con defaults)", () => {
+    const c = cSchema3.parse({
+      _id: "c1", itemCode: "steel", production: 5, workerCount: 0,
+      activeUpgradeLevels: { automatedEngine: 4, breakRoom: 1, storage: 2 },
+      name: "METALES PESADOS CORP", isFull: true, estimatedValue: 555.6,
+    });
+    expect(c.name).toBe("METALES PESADOS CORP");
+    expect(c.isFull).toBe(true);
+    expect(c.estimatedValue).toBeCloseTo(555.6);
+    const c2 = cSchema3.parse({ _id: "c2", itemCode: "oil", production: 1, workerCount: 0, activeUpgradeLevels: {} });
+    expect(c2.name).toBe("");
+    expect(c2.isFull).toBe(false);
+    expect(c2.estimatedValue).toBe(0);
+  });
+  it("gameItemSchema parsea rarity (default common)", () => {
+    expect(giSchema3.parse({ type: "product", productionPoints: 10, productionNeeds: { iron: 10 }, rarity: "uncommon" }).rarity).toBe("uncommon");
+    expect(giSchema3.parse({ type: "raw", productionPoints: 1 }).rarity).toBe("common");
   });
 });
 

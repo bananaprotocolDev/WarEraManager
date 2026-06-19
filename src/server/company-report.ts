@@ -27,6 +27,10 @@ export interface CompanyReport {
   storageMax: number;
   /** Tasa de producción diaria (automatización en 7A; + trabajadores en 7B). */
   dailyProductionRate: number;
+  /** Tasa potencial del modelo: (auto + workers) × (1 + productionBonus) × rateFactor. */
+  potentialRate: number;
+  /** true si dailyProductionRate proviene de ventas reales medidas. */
+  measured: boolean;
   price?: PriceTrendInfo;
   name: string;
   rarity: string;
@@ -42,8 +46,10 @@ export function assembleCompanyReport(args: {
   prices: PriceMap;
   taxes: Taxes;
   upgradesConfig: UpgradesConfig;
-  /** Venta real/día (7B). Si falta, se asume vender todo lo producido. */
-  sellPerDay?: number;
+  /** Tasa real medida (ventas reales/día). Reemplaza a sellPerDay. Si falta, se usa el modelo. */
+  measuredRate?: number;
+  /** Bonus de producción del país (decimal, ej. 0.2 = +20%). Default 0. */
+  productionBonus?: number;
   /** Aporte de trabajadores en unidades/día (7C). Default 0. */
   workerDailyOutput?: number;
   /** Factor de corrección de tasa (calibración). Default 1. */
@@ -51,12 +57,15 @@ export function assembleCompanyReport(args: {
   priceInfo?: PriceTrendInfo;
 }): CompanyReport {
   const automation = automationDailyProd(args.upgradesConfig, args.company.upgrades.automatedEngine);
-  const dailyProductionRate = (automation + (args.workerDailyOutput ?? 0)) * (args.rateFactor ?? 1);
+  const potentialRate =
+    (automation + (args.workerDailyOutput ?? 0)) * (1 + (args.productionBonus ?? 0)) * (args.rateFactor ?? 1);
+  const dailyProductionRate = args.measuredRate ?? potentialRate;
+  const measured = args.measuredRate != null;
   const wageCostPerDay = args.workers.reduce((sum, w) => sum + w.wage, 0);
 
   const profit = companyProfit({
     dailyProductionRate,
-    sellPerDay: args.sellPerDay,
+    sellPerDay: args.measuredRate, // si hay real, fija usefulRate y estimated=false
     item: args.item,
     prices: args.prices,
     taxes: args.taxes,
@@ -74,6 +83,8 @@ export function assembleCompanyReport(args: {
     stock: args.company.production,
     storageMax: storageMax(args.upgradesConfig, args.company.upgrades.storage),
     dailyProductionRate,
+    potentialRate,
+    measured,
     price: args.priceInfo,
     name: args.company.name,
     rarity: args.item.rarity ?? "common",

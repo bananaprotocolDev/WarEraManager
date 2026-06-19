@@ -109,4 +109,21 @@ describe("assembleCompanyReport con itemValue", () => {
     expect(report.marginPerUnit).toBeCloseTo(0.0951 * 0.99, 4);
     expect(report.maxWageToHire).toBeCloseTo(0.0951 * 0.99, 4);
   });
+
+  it("con insumos: margen y maxWage descuentan el costo de insumos (rama itemValue)", () => {
+    const item = { code: "steel", type: "product" as const, productionPoints: 10, productionNeeds: { iron: 10 } };
+    const taxes = { income: 4, market: 1, selfWork: 4 };
+    const prices = { steel: 1.5889, iron: 0.0805 };
+    const itemValue = bestDestinationValue({ item, prices, taxes }); // sin downstream → vende
+    const report = assembleCompanyReport({
+      company: { id: "c1", itemCode: "steel", production: 0, workerCount: 0, upgrades: { automatedEngine: 1, breakRoom: 1, storage: 1 }, name: "X", isFull: false, estimatedValue: 0 },
+      item, workers: [], prices, taxes,
+      upgradesConfig: { automatedEngine: { levels: { "1": { stats: { dailyProd: 24 } } } }, storage: { levels: { "1": { stats: { maxProduction: 200 } } } }, breakRoom: { levels: { "1": { stats: { maxWorkers: 2 } } } } },
+      itemValue,
+    });
+    const expMargin = 1.5889 * 0.99 - 10 * 0.0805;
+    expect(report.marginPerUnit).toBeCloseTo(expMargin, 4);
+    expect(report.maxWageToHire).toBeCloseTo(expMargin / 10, 4);
+    expect(report.destination).toBe("sell");
+  });
 });

@@ -1,4 +1,4 @@
-import { companyProfit, maxWagePerPoint, maxWagePerPointFromValue, automationDailyProd, storageMax } from "@/lib/economy";
+import { companyProfit, maxWagePerPoint, maxWagePerPointFromValue, inputCostPerUnit, automationDailyProd, storageMax } from "@/lib/economy";
 import type { ItemDef, WorkerData, Taxes, PriceMap, ProfitBreakdown, ItemValue } from "@/lib/economy";
 import type { UpgradesConfig } from "@/lib/economy";
 import type { PriceTrendInfo } from "@/lib/economy";
@@ -20,6 +20,7 @@ export interface CompanyReport {
   profit: ProfitBreakdown;
   /** Salario máximo por punto (margen neto de impuesto). */
   maxWageToHire: number;
+  /** Margen por unidad. Con itemValue: valor neto de mejor destino − insumos. Fallback heredado: margen bruto (precio − insumos). Usado solo como señal de rentabilidad (signo). */
   marginPerUnit: number;
   /** Mejor destino del ítem si se calculó (vender vs procesar). */
   destination?: "sell" | "process";
@@ -79,12 +80,9 @@ export function assembleCompanyReport(args: {
   let maxWageToHire: number;
   let destination: "sell" | "process" | undefined;
   if (args.itemValue) {
-    let inputCostPerUnit = 0;
-    for (const [code, qty] of Object.entries(args.item.productionNeeds)) {
-      inputCostPerUnit += qty * (args.prices[code] ?? 0);
-    }
-    marginPerUnit = args.itemValue.unitValue - inputCostPerUnit;
-    maxWageToHire = maxWagePerPointFromValue(args.itemValue.unitValue, inputCostPerUnit, args.item.productionPoints);
+    const inputCost = inputCostPerUnit(args.item, args.prices);
+    marginPerUnit = args.itemValue.unitValue - inputCost;
+    maxWageToHire = maxWagePerPointFromValue(args.itemValue.unitValue, inputCost, args.item.productionPoints);
     destination = args.itemValue.destination;
   } else {
     const mw = maxWagePerPoint(args.item, args.prices, args.taxes);

@@ -55,6 +55,15 @@ export function bestDestinationValue(args: {
   };
 }
 
+/** Costo de insumos comprados por unidad: Σ cantidad × precio sobre productionNeeds. */
+export function inputCostPerUnit(item: ItemDef, prices: PriceMap): number {
+  let total = 0;
+  for (const [code, qty] of Object.entries(item.productionNeeds)) {
+    total += qty * (prices[code] ?? 0);
+  }
+  return total;
+}
+
 /** Salario máximo pagable por punto de producción dado el valor del ítem. */
 export function maxWagePerPointFromValue(
   unitValue: number,

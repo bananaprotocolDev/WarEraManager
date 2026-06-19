@@ -1,5 +1,5 @@
 import type { WareraClient } from "@/lib/warera/client";
-import { toItemDef } from "@/lib/economy";
+import { toItemDef, bestDestinationValue, detectChains, chainNetPerDay, summarizeLaborMarket, type ChainNet, type ChainCompany } from "@/lib/economy";
 import { assembleCompanyReport, type CompanyReport } from "./company-report";
 import { realizedSalesPerDay } from "./sell-rate";
 import { priceTrendFor } from "./price-trend-for";
@@ -15,6 +15,7 @@ export interface Portfolio {
   wagesAvailable: boolean;
   /** true si las cifras son estimadas (game-constants sin calibrar). */
   estimated: boolean;
+  chains: ChainNet[];
 }
 
 export interface BuildPortfolioOptions {
@@ -61,6 +62,7 @@ export async function buildPortfolio(
       }
       const rawItem = gameConfig.items[c.itemCode] ?? { type: "product", productionPoints: 1, productionNeeds: {} };
       const item = toItemDef(c.itemCode, rawItem);
+      const wageCostPerDay = workers.reduce((s, w) => s + (w.wage ?? 0), 0);
       const company = {
         id: c._id, itemCode: c.itemCode, production: c.production, workerCount: c.workerCount,
         upgrades: c.activeUpgradeLevels, name: c.name ?? "", isFull: c.isFull ?? false, estimatedValue: c.estimatedValue ?? 0,
@@ -74,7 +76,7 @@ export async function buildPortfolio(
         upgradesConfig: gameConfig.upgradesConfig,
         rateFactor: opts.rateFactor, productionBonus, measuredRate, priceInfo,
       });
-      return { report, workersOk };
+      return { report, workersOk, item, wageCostPerDay };
     }),
   );
 
@@ -83,5 +85,30 @@ export async function buildPortfolio(
   const totalNetProfit = companies.reduce((s, c) => s + c.profit.netProfit, 0);
   const estimated = companies.some((c) => c.profit.estimated);
 
-  return { userId: opts.userId, companies, totalNetProfit, wagesAvailable, estimated };
+  const offers = await client.getWorkOffers({ limit: 20 }).then((r) => r.items).catch(() => []);
+  const marketWagePerPoint = summarizeLaborMarket(offers).medianWage ?? 0;
+
+  const chainCompanies: ChainCompany[] = results.map((r) => ({
+    id: r.report.id,
+    itemCode: r.report.itemCode,
+    item: r.item,
+    dailyProductionRate: r.report.dailyProductionRate,
+    wageCostPerDay: r.wageCostPerDay,
+  }));
+  const chains: ChainNet[] = detectChains(chainCompanies).map((ch) => {
+    const rawCompany = ch.companies[0];
+    const downstream = ch.companies[ch.companies.length - 1];
+    const dest = bestDestinationValue({
+      item: rawCompany.item, prices, taxes,
+      downstream: { item: downstream.item }, marketWagePerPoint,
+    }).destination;
+    const downstreamReport = companies.find((c) => c.id === downstream.id);
+    return chainNetPerDay({
+      chain: ch, prices, taxes,
+      measured: downstreamReport?.measured === true,
+      rawDestination: dest,
+    });
+  });
+
+  return { userId: opts.userId, companies, totalNetProfit, wagesAvailable, estimated, chains };
 }

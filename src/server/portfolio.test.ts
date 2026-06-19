@@ -18,9 +18,48 @@ function fakeClient(overrides: Partial<Record<string, unknown>> = {}) {
       upgradesConfig: { automatedEngine: { levels: { "3": { stats: { dailyProd: 72 } } } }, storage: { levels: { "1": { stats: { maxProduction: 200 } } } } },
     }),
     getUserItemTransactions: async () => ({ items: [], nextCursor: null }),
+    getWorkOffers: async () => ({ items: [], nextCursor: null }),
     ...overrides,
   } as never;
 }
+
+const upgradesConfig = {
+  automatedEngine: { levels: { "1": { stats: { dailyProd: 24 } } } },
+  storage: { levels: { "1": { stats: { maxProduction: 200 } } } },
+  breakRoom: { levels: { "1": { stats: { maxWorkers: 4 } } } },
+};
+
+// Cliente fake para el caso de cadenas: usuario dueño de petroleum + oil.
+const chainClient = {
+  getUserLite: async () => ({ _id: "u1", username: "me", country: null }),
+  getCountryById: async () => ({ taxes: { income: 0, market: 0, selfWork: 0 }, productionBonus: 0 }),
+  getUserCompanies: async (_userId: string) => ({ items: ["petroleum", "oil"] }),
+  getCompanyById: async (id: string) => {
+    if (id === "petroleum") {
+      return {
+        _id: "petroleum", itemCode: "petroleum", production: 0, workerCount: 0,
+        activeUpgradeLevels: { automatedEngine: 1, breakRoom: 1, storage: 1 },
+        name: "Petro SA", isFull: false, estimatedValue: 0,
+      };
+    }
+    return {
+      _id: "oil", itemCode: "oil", production: 0, workerCount: 0,
+      activeUpgradeLevels: { automatedEngine: 1, breakRoom: 1, storage: 1 },
+      name: "Oil SA", isFull: false, estimatedValue: 0,
+    };
+  },
+  getWorkers: async () => [] as { wage: number }[],
+  getPrices: async () => ({ petroleum: 1.0, oil: 2.0 }),
+  getGameConfig: async () => ({
+    items: {
+      petroleum: { type: "raw", productionPoints: 1, productionNeeds: {} },
+      oil: { type: "product", productionPoints: 1, productionNeeds: { petroleum: 1 } },
+    },
+    upgradesConfig,
+  }),
+  getUserItemTransactions: async () => ({ items: [], nextCursor: null }),
+  getWorkOffers: async () => ({ items: [], nextCursor: null }),
+} as never;
 
 describe("buildPortfolio", () => {
   it("arma el reporte con beneficio por empresa y total", async () => {
@@ -39,6 +78,7 @@ describe("buildPortfolio", () => {
     expect(r.estimated).toBe(true);
     expect(typeof r.companies[0].name).toBe("string");
     expect(typeof r.companies[0].rarity).toBe("string");
+    expect(r.chains).toHaveLength(0);
   });
 
   it("aplica el rateFactor a la tasa de producción", async () => {
@@ -87,5 +127,12 @@ describe("buildPortfolio", () => {
     // 700/7 = 100/día real
     expect(r.companies[0].dailyProductionRate).toBe(100);
     expect(r.companies[0].measured).toBe(true);
+  });
+
+  it("detecta cadenas y expone chains", async () => {
+    const portfolio = await buildPortfolio(chainClient, { userId: "u1", authenticated: false });
+    expect(portfolio.chains).toHaveLength(1);
+    expect(portfolio.chains[0].steps).toEqual(["petroleum", "oil"]);
+    expect(typeof portfolio.chains[0].netPerDay).toBe("number");
   });
 });

@@ -17,6 +17,8 @@ export interface HiringRecommendation {
   freeSlots: number;
   /** true si conocemos la venta/día real (token); false = supuesto. */
   demandKnown: boolean;
+  /** true si hay datos de salario de mercado (medianWage no nulo); si false, netPerWorkerPerDay no es confiable. */
+  marketDataAvailable: boolean;
   recommendedProfile: RecommendedProfile;
   /** Ganancia neta extra esperada por día si contratás el perfil sugerido. */
   expectedDailyGain: number;
@@ -47,6 +49,7 @@ export function hiringRecommendation(args: {
   laborConstants: LaborConstants;
 }): HiringRecommendation {
   const demandKnown = args.sellPerDay !== undefined;
+  const marketDataAvailable = args.market.medianWage != null;
 
   // Perfil sugerido a partir del mercado.
   const minEnergy = args.market.medianMinEnergy ?? 50;
@@ -69,6 +72,7 @@ export function hiringRecommendation(args: {
     suggestedWage: 0,
     freeSlots: args.freeSlots,
     demandKnown,
+    marketDataAvailable,
     recommendedProfile: EMPTY_PROFILE,
     expectedDailyGain: 0,
     addsPerDay,
@@ -90,7 +94,7 @@ export function hiringRecommendation(args: {
   // por el margen restante tras pagar el salario sugerido.
   const totalWorkerUnits = perWorkerUnits * args.freeSlots;
   const addressable = Number.isFinite(headroom) ? Math.min(totalWorkerUnits, headroom) : totalWorkerUnits;
-  const expectedDailyGain = addressable * Math.max(0, args.maxWagePerPoint - suggestedWage);
+  const expectedDailyGain = addressable * Math.max(0, args.maxWagePerPoint - suggestedWage) * args.prodPoints;
 
   return {
     ...baseOut,

@@ -83,6 +83,7 @@ describe("hiringRecommendation $/worker/day", () => {
     expect(rec.netPerWorkerPerDay).toBeGreaterThan(0);
     expect(rec.marketWagePerDay).toBeGreaterThan(0);
     expect(rec.addsPerDay).toBeGreaterThan(0);
+    expect(rec.marketDataAvailable).toBe(true);
   });
 
   it("ítem sin margen → item_unprofitable (antes que market_expensive)", () => {
@@ -102,5 +103,14 @@ describe("hiringRecommendation $/worker/day", () => {
       market: market(0.01), laborConstants: LABOR_CONSTANTS,
     });
     expect(rec.reason).toBe("no_slots");
+  });
+
+  it("sin datos de mercado → marketDataAvailable false", () => {
+    const rec = hiringRecommendation({
+      marginPerUnit: 0.5, unitValue: 0.5, inputCostPerUnit: 0, prodPoints: 1,
+      maxWagePerPoint: 0.5, currentDailyRate: 0, freeSlots: 2,
+      market: market(null), laborConstants: LABOR_CONSTANTS,
+    });
+    expect(rec.marketDataAvailable).toBe(false);
   });
 });

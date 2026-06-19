@@ -35,12 +35,14 @@ export async function buildPortfolio(
   client: WareraClient,
   opts: BuildPortfolioOptions,
 ): Promise<Portfolio> {
-  const [prices, gameConfig, user, companyList] = await Promise.all([
+  const [prices, gameConfig, user, companyList, offersPage] = await Promise.all([
     client.getPrices(),
     client.getGameConfig(),
     client.getUserLite(opts.userId),
     client.getUserCompanies(opts.userId),
+    client.getWorkOffers({ limit: 20 }).catch(() => ({ items: [] })),
   ]);
+  const marketWagePerPoint = summarizeLaborMarket(offersPage.items).medianWage ?? 0;
 
   const country = user.country
     ? await client.getCountryById(user.country)
@@ -62,7 +64,8 @@ export async function buildPortfolio(
       }
       const rawItem = gameConfig.items[c.itemCode] ?? { type: "product", productionPoints: 1, productionNeeds: {} };
       const item = toItemDef(c.itemCode, rawItem);
-      const wageCostPerDay = workers.reduce((s, w) => s + (w.wage ?? 0), 0);
+      // 0 cuando no hay auth (workers vacío); en ese caso el net de cadena queda optimista.
+      const wageCostPerDay = workers.reduce((s, w) => s + w.wage, 0);
       const company = {
         id: c._id, itemCode: c.itemCode, production: c.production, workerCount: c.workerCount,
         upgrades: c.activeUpgradeLevels, name: c.name ?? "", isFull: c.isFull ?? false, estimatedValue: c.estimatedValue ?? 0,
@@ -84,9 +87,6 @@ export async function buildPortfolio(
   const wagesAvailable = opts.authenticated && results.every((r) => r.workersOk);
   const totalNetProfit = companies.reduce((s, c) => s + c.profit.netProfit, 0);
   const estimated = companies.some((c) => c.profit.estimated);
-
-  const offers = await client.getWorkOffers({ limit: 20 }).then((r) => r.items).catch(() => []);
-  const marketWagePerPoint = summarizeLaborMarket(offers).medianWage ?? 0;
 
   const chainCompanies: ChainCompany[] = results.map((r) => ({
     id: r.report.id,

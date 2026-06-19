@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { TrendingUp, TrendingDown, UserPlus } from "lucide-react";
+import { TrendingUp, TrendingDown, UserPlus, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/ui/status-dot";
 import { PriceTrendBadge } from "@/components/price-trend-badge";
+import { ItemImage } from "@/components/item-image";
+import { RarityBadge } from "@/components/rarity-badge";
 import { companyStatus } from "@/lib/ui/company-status";
 import { formatPerDay, formatMoney } from "@/lib/format";
 import type { CompanyReport } from "@/server/portfolio";
@@ -17,10 +19,17 @@ export function CompanyCard({ company }: { company: CompanyReport }) {
   return (
     <Link href={`/company/${company.id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl">
       <Card className="hover:shadow-lg hover:border-primary/40">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <StatusDot color={status.color} label={LABEL[status.level]} />
-            <span className="font-mono font-semibold">{company.itemCode}</span>
+        <div className="flex items-start gap-3">
+          <ItemImage code={company.itemCode} size={44} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <StatusDot color={status.color} label={LABEL[status.level]} />
+              <span className="truncate font-semibold">{company.name || company.itemCode}</span>
+            </div>
+            <div className="mt-0.5 flex items-center gap-2">
+              <span className="font-mono text-xs text-muted-foreground">{company.itemCode}</span>
+              <RarityBadge rarity={company.rarity} />
+            </div>
           </div>
           <Badge tone={status.color}>{LABEL[status.level]}</Badge>
         </div>
@@ -32,7 +41,10 @@ export function CompanyCard({ company }: { company: CompanyReport }) {
           <dt>Producción/día</dt>
           <dd className="tabular text-right text-foreground">{formatMoney(company.dailyProductionRate)}</dd>
           <dt>Stock</dt>
-          <dd className="tabular text-right text-foreground">{formatMoney(company.stock)} / {formatMoney(company.storageMax)}</dd>
+          <dd className="tabular text-right text-foreground">
+            {formatMoney(company.stock)} / {formatMoney(company.storageMax)}
+            {company.isFull ? <AlertTriangle className="ml-1 inline h-3 w-3 text-warning" aria-label="almacén lleno" /> : null}
+          </dd>
         </dl>
         {company.price ? (
           <div className="mt-2">

@@ -35,6 +35,8 @@ describe("CompanyCard", () => {
     expect(screen.getByText("Stock")).toBeInTheDocument();
     expect(screen.getAllByText("rentable").length).toBeGreaterThan(0);
     expect(screen.getByText("(prom 1.40)")).toBeInTheDocument();
+    expect(screen.getByText("MI CORP")).toBeInTheDocument();
+    expect(screen.getByText("poco común")).toBeInTheDocument();
   });
 
   it("muestra pérdida con signo negativo", () => {

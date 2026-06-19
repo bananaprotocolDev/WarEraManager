@@ -130,7 +130,8 @@ export default function CompanyDetailPage() {
                 </h2>
                 <div className="flex flex-wrap gap-2 text-sm">
                   <Badge>Motor automatizado: nivel {data.upgrades.automatedEngine}</Badge>
-                  <Badge>Sala de descanso: nivel {data.upgrades.breakRoom}</Badge>
+                  <Badge>Almacenamiento: nivel {data.upgrades.storage}</Badge>
+                  <Badge>Cupos de trabajadores: nivel {data.upgrades.breakRoom}</Badge>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">El ROI de mejoras llegará con la calibración.</p>
               </Card>

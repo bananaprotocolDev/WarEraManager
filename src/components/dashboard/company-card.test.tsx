@@ -19,6 +19,10 @@ function report(net: number): CompanyReport {
     storageMax: 200,
     dailyProductionRate: 72,
     price: { current: 1.6, avg: 1.4, trend: "up" as const },
+    name: "MI CORP",
+    rarity: "uncommon",
+    isFull: false,
+    estimatedValue: 500,
   };
 }
 

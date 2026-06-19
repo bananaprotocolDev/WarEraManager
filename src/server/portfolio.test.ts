@@ -36,6 +36,8 @@ describe("buildPortfolio", () => {
     expect(r.totalNetProfit).toBeCloseTo(79.8);
     expect(r.wagesAvailable).toBe(true);
     expect(r.estimated).toBe(true);
+    expect(typeof r.companies[0].name).toBe("string");
+    expect(typeof r.companies[0].rarity).toBe("string");
   });
 
   it("aplica el rateFactor a la tasa de producción", async () => {

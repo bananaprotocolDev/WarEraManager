@@ -78,7 +78,10 @@ export async function buildCompanyDetail(
     itemCode: c.itemCode,
     production: c.production,
     workerCount: c.workerCount,
-    upgrades: c.activeUpgradeLevels, // { automatedEngine, breakRoom, storage }
+    upgrades: c.activeUpgradeLevels,
+    name: c.name ?? "",
+    isFull: c.isFull ?? false,
+    estimatedValue: c.estimatedValue ?? 0,
   };
 
   const sellPerDay = opts.authenticated

@@ -15,6 +15,9 @@ const company = {
   production: 191, // stock
   workerCount: 0,
   upgrades: { automatedEngine: 3, breakRoom: 1, storage: 1 },
+  name: "",
+  isFull: false,
+  estimatedValue: 0,
 };
 
 describe("assembleCompanyReport", () => {
@@ -48,5 +51,16 @@ describe("assembleCompanyReport", () => {
       priceInfo: { current: 1.6, avg: 1.4, trend: "up" },
     });
     expect(r.price).toEqual({ current: 1.6, avg: 1.4, trend: "up" });
+  });
+
+  it("expone name, rarity, isFull y estimatedValue", () => {
+    const r = assembleCompanyReport({
+      company: { ...company, name: "MI CORP", isFull: true, estimatedValue: 500 },
+      item: { ...bread, rarity: "uncommon" }, workers: [], prices, taxes, upgradesConfig,
+    });
+    expect(r.name).toBe("MI CORP");
+    expect(r.rarity).toBe("uncommon");
+    expect(r.isFull).toBe(true);
+    expect(r.estimatedValue).toBe(500);
   });
 });

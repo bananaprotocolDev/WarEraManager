@@ -39,6 +39,8 @@ describe("buildCompanyDetail", () => {
     expect(d.upgrades.automatedEngine).toBe(3);
     expect(d.upgrades.storage).toBe(1);
     expect(d.recipe).toEqual([{ input: "grain", qtyPerUnit: 2 }]);
+    expect(typeof d.report.name).toBe("string");
+    expect(typeof d.report.rarity).toBe("string");
   });
 
   it("sin auth: no lee trabajadores, wagesAvailable=false", async () => {

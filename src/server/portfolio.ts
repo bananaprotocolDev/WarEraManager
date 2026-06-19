@@ -73,7 +73,10 @@ export async function buildPortfolio(
       itemCode: c.itemCode,
       production: c.production,
       workerCount: c.workerCount,
-      upgrades: c.activeUpgradeLevels, // { automatedEngine, breakRoom, storage }
+      upgrades: c.activeUpgradeLevels,
+      name: c.name ?? "",
+      isFull: c.isFull ?? false,
+      estimatedValue: c.estimatedValue ?? 0,
     };
     const priceInfo = await priceTrendFor(opts.priceStore, c.itemCode, prices);
     const report = assembleCompanyReport({ company, item, workers, prices, taxes, upgradesConfig: gameConfig.upgradesConfig, rateFactor: opts.rateFactor, priceInfo });

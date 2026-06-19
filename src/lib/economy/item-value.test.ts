@@ -51,6 +51,23 @@ describe("bestDestinationValue", () => {
     });
     expect(v.processValue).toBeCloseTo(0.5 * 0.99 - 0.1, 4);
   });
+
+  it("downstream que no consume este ítem → processValue null, destino sell", () => {
+    const v = bestDestinationValue({
+      item: raw("iron"),
+      prices: { iron: 0.08, steel: 0.5 },
+      taxes,
+      downstream: { item: product("steel", { coal: 2 }, 1) },
+    });
+    expect(v.processValue).toBeNull();
+    expect(v.destination).toBe("sell");
+  });
+
+  it("downstream null explícito → processValue null", () => {
+    const v = bestDestinationValue({ item: raw("iron"), prices: { iron: 0.08 }, taxes, downstream: null });
+    expect(v.processValue).toBeNull();
+    expect(v.destination).toBe("sell");
+  });
 });
 
 describe("maxWagePerPointFromValue", () => {

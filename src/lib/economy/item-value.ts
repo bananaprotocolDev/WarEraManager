@@ -16,6 +16,8 @@ export interface ItemValue {
  * Valor marginal real de una unidad del ítem: max(venderlo neto, procesarlo).
  * `downstream` es el producto propio que consume este ítem (si existe). `marketWagePerPoint`
  * costea la mano de obra de procesar el downstream (default 0).
+ * `processValue` se expresa por unidad de ESTE ítem consumida por el downstream:
+ * (ventaNeta(q) − otrosInsumos − labor) / n, donde n es la cantidad requerida por unidad de q.
  */
 export function bestDestinationValue(args: {
   item: ItemDef;
@@ -46,7 +48,7 @@ export function bestDestinationValue(args: {
 
   const useProcess = processValue != null && processValue > sellNet;
   return {
-    unitValue: useProcess ? (processValue as number) : sellNet,
+    unitValue: useProcess && processValue != null ? processValue : sellNet,
     destination: useProcess ? "process" : "sell",
     sellNet,
     processValue,

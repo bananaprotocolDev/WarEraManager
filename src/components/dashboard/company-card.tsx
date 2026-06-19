@@ -38,8 +38,14 @@ export function CompanyCard({ company }: { company: CompanyReport }) {
           {formatPerDay(company.profit.netProfit)}
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <dt>Producción/día</dt>
+          <dt>Producción/día {company.measured ? <span className="text-success">· real</span> : <span className="text-muted-foreground">· est.</span>}</dt>
           <dd className="tabular text-right text-foreground">{formatMoney(company.dailyProductionRate)}</dd>
+          {company.measured && company.potentialRate > company.dailyProductionRate ? (
+            <>
+              <dt className="text-muted-foreground">Potencial/día</dt>
+              <dd className="tabular text-right text-muted-foreground">{formatMoney(company.potentialRate)}</dd>
+            </>
+          ) : null}
           <dt>Stock</dt>
           <dd className="tabular text-right text-foreground">
             {formatMoney(company.stock)} / {formatMoney(company.storageMax)}

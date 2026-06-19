@@ -33,7 +33,7 @@ describe("CompanyCard", () => {
     render(<CompanyCard company={report(28.4)} />);
     expect(screen.getByText("bread")).toBeInTheDocument();
     expect(screen.getByText("+28.40 /día")).toBeInTheDocument();
-    expect(screen.getByText("Producción/día")).toBeInTheDocument();
+    expect(screen.getByText(/Producción\/día/)).toBeInTheDocument();
     expect(screen.getByText("Stock")).toBeInTheDocument();
     expect(screen.getAllByText("rentable").length).toBeGreaterThan(0);
     expect(screen.getByText("(prom 1.40)")).toBeInTheDocument();

@@ -82,8 +82,18 @@ export default function CompanyDetailPage() {
               </div>
               <div className={`tabular text-3xl font-bold ${positive ? "text-success" : "text-destructive"}`}>
                 {formatPerDay(data.report.profit.netProfit)}
-                {data.report.profit.estimated ? <span className="ml-2 text-xs text-muted-foreground">estimado</span> : null}
+                {data.report.measured ? (
+                  <span className="ml-2 text-xs text-success">real · últimos 7d</span>
+                ) : (
+                  <span className="ml-2 text-xs text-muted-foreground">estimado (potencial)</span>
+                )}
               </div>
+              {data.report.measured && data.report.potentialRate > data.report.dailyProductionRate ? (
+                <p className="text-xs text-muted-foreground">
+                  Potencial: {formatMoney(data.report.potentialRate)}/día ·
+                  aprovechás {Math.round((data.report.dailyProductionRate / data.report.potentialRate) * 100)}%
+                </p>
+              ) : null}
               {data.report.price ? (
                 <div>
                   <PriceTrendBadge price={data.report.price} />

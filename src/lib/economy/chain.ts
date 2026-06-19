@@ -20,6 +20,7 @@ export interface Chain {
 export interface ChainNet {
   steps: string[];
   netPerDay: number;
+  /** Mejor destino del raw, provisto por el caller (calculado vía bestDestinationValue). */
   bestRawDestination: "sell" | "process";
   /** true si la producción del final proviene de ventas reales medidas. */
   measured: boolean;
@@ -36,7 +37,7 @@ export function detectChains(companies: ChainCompany[]): Chain[] {
   for (const prod of companies) {
     for (const inputCode of Object.keys(prod.item.productionNeeds)) {
       const rawCompany = byItem.get(inputCode);
-      if (rawCompany) {
+      if (rawCompany && rawCompany !== prod) {
         chains.push({ steps: [inputCode, prod.itemCode], companies: [rawCompany, prod] });
       }
     }

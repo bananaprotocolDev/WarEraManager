@@ -30,6 +30,19 @@ describe("detectChains", () => {
     const companies = [cc({ itemCode: "oil", item: product("oil", { petroleum: 1 }) })];
     expect(detectChains(companies)).toEqual([]);
   });
+
+  it("producto con dos insumos propios → dos cadenas", () => {
+    const companies = [
+      cc({ itemCode: "petroleum", item: raw("petroleum") }),
+      cc({ itemCode: "additive", item: raw("additive") }),
+      cc({ itemCode: "oil", item: product("oil", { petroleum: 1, additive: 2 }) }),
+    ];
+    const chains = detectChains(companies);
+    expect(chains.map((c) => c.steps)).toEqual([
+      ["petroleum", "oil"],
+      ["additive", "oil"],
+    ]);
+  });
 });
 
 describe("chainNetPerDay", () => {

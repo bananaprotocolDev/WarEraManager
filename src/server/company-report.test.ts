@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { assembleCompanyReport } from "./company-report";
+import { bestDestinationValue } from "@/lib/economy";
 import type { ItemDef, PriceMap, Taxes } from "@/lib/economy";
 
 const bread: ItemDef = { code: "bread", type: "product", productionPoints: 1, productionNeeds: { grain: 2 } };
@@ -85,5 +86,27 @@ describe("assembleCompanyReport", () => {
     expect(r.potentialRate).toBeCloseTo(90); // modelo, para comparar
     expect(r.measured).toBe(true);
     expect(r.profit.estimated).toBe(false);
+  });
+});
+
+describe("assembleCompanyReport con itemValue", () => {
+  it("usa el valor de mejor destino para margen/maxWage y expone destination", () => {
+    const item = { code: "petroleum", type: "raw" as const, productionPoints: 1, productionNeeds: {} };
+    const taxes = { income: 4, market: 1, selfWork: 4 };
+    const prices = { petroleum: 0.0951, oil: 0.1775 };
+    const itemValue = bestDestinationValue({
+      item, prices, taxes,
+      downstream: { item: { code: "oil", type: "product" as const, productionPoints: 1, productionNeeds: { petroleum: 1 } } },
+      marketWagePerPoint: 0.13,
+    });
+    const report = assembleCompanyReport({
+      company: { id: "c1", itemCode: "petroleum", production: 0, workerCount: 0, upgrades: { automatedEngine: 1, breakRoom: 1, storage: 1 }, name: "OPC", isFull: false, estimatedValue: 0 },
+      item, workers: [], prices, taxes,
+      upgradesConfig: { automatedEngine: { levels: { "1": { stats: { dailyProd: 24 } } } }, storage: { levels: { "1": { stats: { maxProduction: 200 } } } }, breakRoom: { levels: { "1": { stats: { maxWorkers: 2 } } } } },
+      itemValue,
+    });
+    expect(report.destination).toBe("sell");
+    expect(report.marginPerUnit).toBeCloseTo(0.0951 * 0.99, 4);
+    expect(report.maxWageToHire).toBeCloseTo(0.0951 * 0.99, 4);
   });
 });

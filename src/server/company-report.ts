@@ -1,5 +1,5 @@
-import { companyProfit, maxWagePerPoint, automationDailyProd, storageMax } from "@/lib/economy";
-import type { ItemDef, WorkerData, Taxes, PriceMap, ProfitBreakdown } from "@/lib/economy";
+import { companyProfit, maxWagePerPoint, maxWagePerPointFromValue, automationDailyProd, storageMax } from "@/lib/economy";
+import type { ItemDef, WorkerData, Taxes, PriceMap, ProfitBreakdown, ItemValue } from "@/lib/economy";
 import type { UpgradesConfig } from "@/lib/economy";
 import type { PriceTrendInfo } from "@/lib/economy";
 
@@ -21,6 +21,8 @@ export interface CompanyReport {
   /** Salario máximo por punto (margen neto de impuesto). */
   maxWageToHire: number;
   marginPerUnit: number;
+  /** Mejor destino del ítem si se calculó (vender vs procesar). */
+  destination?: "sell" | "process";
   /** Stock actual en almacén. */
   stock: number;
   /** Tope del almacén. */
@@ -55,6 +57,7 @@ export function assembleCompanyReport(args: {
   /** Factor de corrección de tasa (calibración). Default 1. */
   rateFactor?: number;
   priceInfo?: PriceTrendInfo;
+  itemValue?: ItemValue;
 }): CompanyReport {
   const automation = automationDailyProd(args.upgradesConfig, args.company.upgrades.automatedEngine);
   const potentialRate =
@@ -72,14 +75,30 @@ export function assembleCompanyReport(args: {
     wageCostPerDay,
   });
 
-  const mw = maxWagePerPoint(args.item, args.prices, args.taxes);
+  let marginPerUnit: number;
+  let maxWageToHire: number;
+  let destination: "sell" | "process" | undefined;
+  if (args.itemValue) {
+    let inputCostPerUnit = 0;
+    for (const [code, qty] of Object.entries(args.item.productionNeeds)) {
+      inputCostPerUnit += qty * (args.prices[code] ?? 0);
+    }
+    marginPerUnit = args.itemValue.unitValue - inputCostPerUnit;
+    maxWageToHire = maxWagePerPointFromValue(args.itemValue.unitValue, inputCostPerUnit, args.item.productionPoints);
+    destination = args.itemValue.destination;
+  } else {
+    const mw = maxWagePerPoint(args.item, args.prices, args.taxes);
+    marginPerUnit = mw.marginPerUnit;
+    maxWageToHire = mw.maxWage;
+  }
 
   return {
     id: args.company.id,
     itemCode: args.company.itemCode,
     profit,
-    maxWageToHire: mw.maxWage,
-    marginPerUnit: mw.marginPerUnit,
+    maxWageToHire,
+    marginPerUnit,
+    destination,
     stock: args.company.production,
     storageMax: storageMax(args.upgradesConfig, args.company.upgrades.storage),
     dailyProductionRate,

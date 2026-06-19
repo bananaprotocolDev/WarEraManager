@@ -8,6 +8,8 @@ export interface ItemDef {
   productionPoints: number;
   /** Insumos por unidad producida: { itemCode: cantidad }. */
   productionNeeds: Record<string, number>;
+  /** Rareza del item (común/uncommon/...). Opcional; default "common" al consumir. */
+  rarity?: string;
 }
 
 /** Trabajador (de worker.getWorkers). */

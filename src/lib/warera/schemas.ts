@@ -18,6 +18,9 @@ export const companySchema = z
     itemCode: z.string(),
     production: z.number().default(0),
     workerCount: z.number().default(0),
+    name: z.string().default(""),
+    isFull: z.boolean().default(false),
+    estimatedValue: z.number().default(0),
     activeUpgradeLevels: z
       .object({
         automatedEngine: z.number().default(0),
@@ -73,6 +76,7 @@ export const gameItemSchema = z
     type: z.string().default("product"),
     productionPoints: z.number().default(1),
     productionNeeds: z.record(z.string(), z.number()).default({}),
+    rarity: z.string().default("common"),
   })
   .passthrough();
 

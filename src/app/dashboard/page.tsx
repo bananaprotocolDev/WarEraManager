@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { CompanyCard } from "@/components/dashboard/company-card";
 import { PortfolioAlerts } from "@/components/dashboard/portfolio-alerts";
+import { ChainsCard } from "@/components/dashboard/chains-card";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { usePortfolio } from "@/lib/client/use-portfolio";
@@ -61,6 +62,7 @@ export default function DashboardPage() {
             />
           </div>
           <PortfolioAlerts portfolio={data} />
+          <ChainsCard chains={data.chains} />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.companies.map((c) => (
               <CompanyCard key={c.id} company={c} />
